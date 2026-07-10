@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import forbesLogo from '../assets/forbes-aac-logo.png'
 
 export default function Login() {
   const { signIn, signUp } = useAuth()
@@ -31,7 +32,8 @@ export default function Login() {
     <div className="center-page">
       <div className="card auth-card">
         <div className="eyebrow">{mode === 'signin' ? 'Welcome back' : 'Join the team'}</div>
-        <h1 style={{ fontSize: 30, marginBottom: 18 }}>Basecamp Wellness</h1>
+      <img src={forbesLogo} alt="Forbes AAC" style={{ height: 40, marginBottom: 10 }} />
+        <h1 style={{ fontSize: 22, marginBottom: 18 }}>Wellness</h1>
 
         <div className="tabs">
           <button type="button" className={`tab ${mode === 'signin' ? 'active' : ''}`} onClick={() => setMode('signin')}>Sign in</button>
