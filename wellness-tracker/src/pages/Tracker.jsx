@@ -67,6 +67,11 @@ const handlePhotoChange = (challenge_type, file) => {
   setPhotos((prev) => ({ ...prev, [challenge_type]: file }))
 }
 
+const handleEdit = (date) => {
+  setLogDate(date)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 const save = async (challenge_type, target) => {
   const value = Number(values[challenge_type])
   if (!value && value !== 0) return
@@ -118,7 +123,7 @@ return (
 <div className="card" style={{ marginBottom: 22, maxWidth: 320 }}>
 <label htmlFor="logDate" className="help-text" style={{ display: 'block', marginBottom: 6 }}>Which day are you logging?</label>
   <input
-             id="logDate"
+id="logDate"
 type="date"
 value={logDate}
 max={today}
@@ -155,7 +160,7 @@ onChange={(ev) => setLogDate(ev.target.value)}
 <input
 type="file"
 accept="image/*"
-  onChange={(ev) => handlePhotoChange('steps', ev.target.files[0])}
+onChange={(ev) => handlePhotoChange('steps', ev.target.files[0])}
 />
 {!photos.steps && existingPhotos.steps && (
   <p className="help-text" style={{ marginTop: 6 }}>Photo already attached for this day ✓</p>
@@ -177,7 +182,7 @@ accept="image/*"
 <h3 style={{ fontSize: 18, marginBottom: 14 }}>This month's history</h3>
   <table>
 <thead>
-<tr><th>Date</th><th>Challenge</th><th>Value</th><th>Goal met</th><th>Photo</th></tr>
+<tr><th>Date</th><th>Challenge</th><th>Value</th><th>Goal met</th><th>Photo</th><th>Edit</th></tr>
 </thead>
 <tbody>
 {history.map((h) => (
@@ -187,10 +192,11 @@ accept="image/*"
 <td>{h.value.toLocaleString()}</td>
 <td><span className={`badge ${h.goal_met ? 'badge-on' : 'badge-off'}`}>{h.goal_met ? 'Yes' : 'No'}</span></td>
 <td>{h.photo_url ? <a href={h.photo_url} target="_blank" rel="noreferrer">View</a> : '—'}</td>
+<td><button className="btn btn-outline" style={{ padding: '6px 14px', fontSize: 12 }} onClick={() => handleEdit(h.log_date)}>Edit</button></td>
 </tr>
-))}
+  ))}
 {history.length === 0 && (
-  <tr><td colSpan={5} className="help-text">No entries logged yet this month.</td></tr>
+  <tr><td colSpan={6} className="help-text">No entries logged yet this month.</td></tr>
  )}
 </tbody>
 </table>
