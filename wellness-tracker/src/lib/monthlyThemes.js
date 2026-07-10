@@ -50,7 +50,6 @@ tips: [
 7: {
 theme: 'Sun Safety and Summer Hydration',
 tips: [
-'Sunscreen works best when applied 15 to 30 minutes before sun exposure, and reapplied every 2 hours.',
 'Heat and humidity increase how much water and electrolytes your body loses, so hydrate before you feel thirsty.',
 'Early morning or evening workouts help you stay active while avoiding peak heat.',
 ],
