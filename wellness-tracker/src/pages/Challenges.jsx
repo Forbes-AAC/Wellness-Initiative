@@ -21,7 +21,7 @@ const TYPES = [
 ]
 
 export default function Challenges() {
-  const { user } = useAuth()
+  const  { user, profile  } = useAuth()
   const month = currentMonth()
   const [active, setActive] = useState('steps')
   const [enrollments, setEnrollments] = useState({})
@@ -62,6 +62,20 @@ export default function Challenges() {
   }
 
   if (loading) return <main className="content"><p>Loading…</p></main>
+
+  if (!profile?.enrolled_at) {
+    return (
+      <main className="content">
+    <div className="card" style={{ maxWidth: 520 }}>
+  <h3 style={{ fontSize: 20, marginBottom: 10 }}>Enroll first</h3>
+<p className="help-text" style={{ marginBottom: 16 }}>
+Before picking a challenge, complete the quick enrollment form on your Dashboard.
+  </p>
+<a href="/" className="btn btn-primary">Go to Dashboard</a>
+</div>
+</main>
+)
+}
 
   return (
     <main className="content">
