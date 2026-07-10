@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../contexts/AuthContext'
 import { currentMonth, monthLabel, daysElapsedInMonth } from '../lib/dateUtils'
+import { MONTHLY_THEMES } from '../lib/monthlyThemes'
 
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition' }
 const TRAIL_MILESTONE_MILES = 500 // fun collective company goal, tweak as you like
@@ -62,6 +63,9 @@ const enrolledCount = profiles.filter((p) => p.enrolled_at).length
   const enrolledPct = Math.min(100, Math.round((enrolledCount / TOTAL_EMPLOYEES) * 100))
   const isEnrolled = Boolean(profile?.enrolled_at)
 
+const monthNum = Number(month.split('-')[1])
+  const theme = MONTHLY_THEMES[monthNum]
+
 const handleEnrolled = async () => {
   setShowEnroll(false)
   if (refreshProfile) await refreshProfile()
@@ -88,6 +92,18 @@ return (
     <button className="btn btn-primary" onClick={() => setShowEnroll(true)}>Enroll Now!</button>
 )}
 </div>
+
+{theme && (
+  <div className="card" style={{ marginBottom: 26 }}>
+<div className="eyebrow" style={{ marginBottom: 10 }}>This month's focus</div>
+  <h3 style={{ fontSize: 20, marginBottom: 10 }}>{theme.theme}</h3>
+<ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
+{theme.tips.map((tip, i) => (
+  <li key={i}>{tip}</li>
+  ))}
+</ul>
+                 </div>
+  )}
 
 <div className="trail-card" style={{ marginBottom: 26 }}>
 <div className="eyebrow">The company trail</div>
