@@ -54,7 +54,7 @@ export default function Dashboard() {
   return (
     <main className="content">
       <div className="eyebrow">{monthLabel(month)} · company wellness</div>
-      <h1 style={{ fontSize: 34, marginBottom: 22 }}>Basecamp</h1>
+      <h1 style={{ fontSize: 34, marginBottom: 22 }}>Forbes AAC Wellness</h1>
 
       <div className="trail-card" style={{ marginBottom: 26 }}>
         <div className="eyebrow">The company trail</div>
@@ -122,8 +122,8 @@ function TrailSvg({ pct }) {
         const x = 40 + (cp / 100) * (width - 80)
         return <circle key={cp} cx={x} cy="70" r="5" fill="rgba(251,248,239,0.5)" />
       })}
-      <circle cx={markerX} cy="70" r="9" fill="#D9A441" stroke="#16302A" strokeWidth="3" />
-      <text x={markerX} y="105" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="13" fill="#D9A441">
+      <circle cx={markerX} cy="70" r="9" fill="#A6CE39" stroke="#14588F" strokeWidth="3" />
+      <text x={markerX} y="105" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="13" fill="#A6CE39">
         {pct}%
       </text>
     </svg>
