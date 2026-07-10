@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import forbesLogo from '../assets/forbes-aac-logo.png'
 
 export default function Nav() {
   const { profile, signOut } = useAuth()
@@ -7,8 +8,8 @@ export default function Nav() {
   return (
     <header className="topbar">
       <div className="brand">
-        <span className="blaze" />
-        <span className="display">Basecamp</span>
+        <img src={forbesLogo} alt="Forbes AAC" style={{ height: 28 }} />
+        <span className="display" style={{ fontSize: 16 }}>Wellness</span>
       </div>
       <nav className="nav-links">
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>Dashboard</NavLink>
