@@ -15,10 +15,13 @@ import {
 
 const TYPES = [
   { key: 'steps', label: 'Steps challenge' },
+  { key: 'workout', label: 'Workout challenge' },
   { key: 'weight', label: 'Weight loss challenge' },
   { key: 'water', label: 'Water challenge' },
   { key: 'nutrition', label: 'Nutrition challenge' },
 ]
+
+const WORKOUT_DAY_OPTIONS = [3, 4, 5]
 
 export default function Challenges() {
   const  { user, profile  } = useAuth()
@@ -103,6 +106,9 @@ Before picking a challenge, complete the quick enrollment form on your Dashboard
       )}
       {active === 'nutrition' && (
         <NutritionPanel enrollment={enrollments.nutrition} onSave={(v) => upsert('nutrition', { daily_target: v })} onLeave={() => leave('nutrition')} saving={saving} />
+      )}
+      {active === 'workout' && (
+        <WorkoutPanel enrollment={enrollments.workout} onSave={(v) => upsert('workout', { days_target: v.days_target })} onLeave={() => leave('workout')} saving={saving} />
       )}
     </main>
   )
@@ -312,5 +318,33 @@ function NutritionPanel({ enrollment, onSave, onLeave, saving }) {
         {enrollment && <button className="btn btn-danger" disabled={saving} onClick={onLeave}>Leave challenge</button>}
       </div>
     </div>
+  )
+}
+
+
+function WorkoutPanel({ enrollment, onSave, onLeave, saving }) {
+    const [days, setDays] = useState(enrollment?.days_target || 3)
+
+  return (
+        <div className="card" style={{ maxWidth: 640 }}>
+                <h2 style={{ fontSize: 20, marginBottom: 8 }}>Pick your weekly workout goal</h2>
+      <p className="help-text" style={{ marginBottom: 16 }}>Choose how many days a week you're committing to. Every session needs to be at least 45 minutes to count, logged on the Tracker page.</p>
+      <div className="grid-3" style={{ marginBottom: 16 }}>
+        {WORKOUT_DAY_OPTIONS.map((d) => (
+                    <label
+                                  key={d}
+                                  className="card"
+                                  style={{ padding: 16, cursor: 'pointer', textAlign: 'center', border: days === d ? '2px solid var(--pine)' : undefined }}
+                         
+                                  <input type="radio" name="workout" checked={days === d} onChange={() => setDays(d)} style={{ display: 'none' }} />>
+                      <div className="stat-number" style={{ fontSize: 28 }}>{d}</div>
+                      <div className="stat-label">days / week</div></label>
+        ))}
+      </div>
+    <div style={{ display: 'flex', gap: 12 }}>
+            <button className="btn btn-primary" disabled={saving} onClick={() => onSave({ days_target: days })}>{enrollment ? 'Update goal' : 'Enroll this month'}</button>
+      {enrollment && <button className="btn btn-danger" disabled={saving} onClick={onLeave}>Leave challenge</button>}
+    </div>
+        </div>
   )
 }
