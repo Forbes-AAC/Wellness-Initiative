@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import forbesLogo from '../assets/forbes-aac-logo.png'
 
 export default function Login() {
-  const { signIn, signUp } = useAuth()
+    const { signIn, signUp, resetPasswordForEmail } = useAuth()
   const [mode, setMode] = useState('signin')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -20,10 +20,14 @@ export default function Login() {
     if (mode === 'signin') {
       const { error } = await signIn(email, password)
       if (error) setError(error.message)
-    } else {
+    } else if (mode === 'signup') {
       const { error } = await signUp(email, password, fullName)
       if (error) setError(error.message)
       else setNotice('Account created! Check your email to confirm, then sign in.')
+    } else if (mode === 'forgot') {
+        const { error } = await resetPasswordForEmail(email)
+        if (error) setError(error.message)
+        else setNotice('Check your email for a link to reset your password.')
     }
     setBusy(false)
   }
@@ -35,10 +39,11 @@ export default function Login() {
       <img src={forbesLogo} alt="Forbes AAC" style={{ height: 40, marginBottom: 10 }} />
         <h1 style={{ fontSize: 22, marginBottom: 18 }}>Wellness</h1>
 
-        <div className="tabs">
+        {mode !== 'forgot' && (
+      <div className="tabs">
           <button type="button" className={`tab ${mode === 'signin' ? 'active' : ''}`} onClick={() => setMode('signin')}>Sign in</button>
           <button type="button" className={`tab ${mode === 'signup' ? 'active' : ''}`} onClick={() => setMode('signup')}>Create account</button>
-        </div>
+        </div>)}
 
         <form onSubmit={submit}>
           {mode === 'signup' && (
@@ -51,16 +56,27 @@ export default function Login() {
             <label>Work email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          <div className="field">
+          {mode !== 'forgot' && (
+      <div className="field">
             <label>Password</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
-          </div>
+          </div>)}
           {error && <p className="error-text">{error}</p>}
           {notice && <p className="help-text">{notice}</p>}
           <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} disabled={busy}>
-            {mode === 'signin' ? 'Sign in' : 'Create account'}
+            {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
           </button>
         </form>
+            {mode === 'signin' && (
+        <p className="help-text" style={{ marginTop: 12, textAlign: 'center' }}>
+              <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice('') }} style={{ background: 'none', border: 'none', color: 'var(--pine)', textDecoration: 'underline', cursor: 'pointer', padding: 0, font: 'inherit' }}>Forgot password?</button>
+        </p>
+      )}
+        {mode === 'forgot' && (
+        <p className="help-text" style={{ marginTop: 12, textAlign: 'center' }}>
+              <button type="button" onClick={() => { setMode('signin'); setError(''); setNotice('') }} style={{ background: 'none', border: 'none', color: 'var(--pine)', textDecoration: 'underline', cursor: 'pointer', padding: 0, font: 'inherit' }}>Back to sign in</button>
+        </p>
+      )}
       </div>
     </div>
   )
