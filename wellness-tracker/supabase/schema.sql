@@ -48,7 +48,7 @@ create trigger on_auth_user_created
 create table if not exists enrollments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
-  challenge_type text not null check (challenge_type in ('steps','weight','water','nutrition,'workout'')),
+    challenge_type text not null check (challenge_type in ('steps','weight','water','nutrition','workout')),
   month text not null, -- format: 'YYYY-MM'
   -- steps challenge
   steps_target int check (steps_target in (8000,10000,12000,20000)),
@@ -86,7 +86,7 @@ create policy "Users delete their own enrollments"
 create table if not exists daily_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
-  challenge_type text not null check (challenge_type in ('steps','water','nutrition,'workout'')),
+      challenge_type text not null check (challenge_type in ('steps','water','nutrition','workout')),
   log_date date not null,
   value numeric not null,
   goal_met boolean not null default false,
