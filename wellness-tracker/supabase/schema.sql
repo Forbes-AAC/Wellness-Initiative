@@ -44,11 +44,11 @@ create trigger on_auth_user_created
 
 -- ---------- ENROLLMENTS ----------
 -- One row per person, per challenge type, per month.
--- challenge_type: 'steps' | 'weight' | 'water' | 'nutrition'
+-- challenge_type: 'steps' | 'weight' | 'water' | 'nutrition' | 'workout'
 create table if not exists enrollments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
-  challenge_type text not null check (challenge_type in ('steps','weight','water','nutrition')),
+  challenge_type text not null check (challenge_type in ('steps','weight','water','nutrition,'workout'')),
   month text not null, -- format: 'YYYY-MM'
   -- steps challenge
   steps_target int check (steps_target in (8000,10000,12000,20000)),
@@ -57,6 +57,8 @@ create table if not exists enrollments (
   ending_weight numeric,
   -- water challenge (oz/day), nutrition challenge (calories/day)
   daily_target numeric,
+  -- workout challenge (days/week goal)
+  days_target int check (days_target in (3,4,5)),
   created_at timestamptz not null default now(),
   unique (user_id, challenge_type, month)
 );
@@ -84,7 +86,7 @@ create policy "Users delete their own enrollments"
 create table if not exists daily_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
-  challenge_type text not null check (challenge_type in ('steps','water','nutrition')),
+  challenge_type text not null check (challenge_type in ('steps','water','nutrition,'workout'')),
   log_date date not null,
   value numeric not null,
   goal_met boolean not null default false,
@@ -173,3 +175,19 @@ join profiles p on p.id = e.user_id;
 -- Make yourself an admin after you sign up once, by running:
 -- update profiles set is_admin = true where full_name = 'Your Name';
 -- =========================================================
+
+
+-- =========================================================
+-- MIGRATION: run this once if your enrollments/daily_logs
+-- tables already existed before the Workout Challenge was added.
+-- (Safe to skip on a brand-new database created from this file.)
+-- =========================================================
+alter table enrollments drop constraint if exists enrollments_challenge_type_check;
+alter table enrollments add constraint enrollments_challenge_type_check
+  check (challenge_type in ('steps','weight','water','nutrition','workout'));
+
+alter table enrollments add column if not exists days_target int check (days_target in (3,4,5));
+
+alter table daily_logs drop constraint if exists daily_logs_challenge_type_check;
+alter table daily_logs add constraint daily_logs_challenge_type_check
+  check (challenge_type in ('steps','water','nutrition','workout'));
