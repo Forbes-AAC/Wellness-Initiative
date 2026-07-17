@@ -334,9 +334,9 @@ function WorkoutPanel({ enrollment, onSave, onLeave, saving }) {
                     <label
                                   key={d}
                                   className="card"
-                                  style={{ padding: 16, cursor: 'pointer', textAlign: 'center', border: days === d ? '2px solid var(--pine)' : undefined }}
+                                  style={{ padding: 16, cursor: 'pointer', textAlign: 'center', border: days === d ? '2px solid var(--pine)' : undefined }}>
                          
-                                  <input type="radio" name="workout" checked={days === d} onChange={() => setDays(d)} style={{ display: 'none' }} />>
+                                  <input type="radio" name="workout" checked={days === d} onChange={() => setDays(d)} style={{ display: 'none' }} />
                       <div className="stat-number" style={{ fontSize: 28 }}>{d}</div>
                       <div className="stat-label">days / week</div></label>
         ))}
