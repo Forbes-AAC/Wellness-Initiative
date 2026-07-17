@@ -7,6 +7,7 @@ const LABELS = {
   steps: { label: 'Steps', unit: 'steps' },
   water: { label: 'Water', unit: 'oz' },
   nutrition: { label: 'Calories', unit: 'cal' },
+  workout: { label: 'Workout', unit: 'min' },
 }
 
 export default function Tracker() {
@@ -29,7 +30,7 @@ const load = async (dateForValues) => {
   .select('*')
   .eq('user_id', user.id)
   .eq('month', month)
-  .in('challenge_type', ['steps', 'water', 'nutrition'])
+  .in('challenge_type', ['steps', 'water', 'nutrition', 'workout'])
 
   const { data: dayRows } = await supabase
   .from('daily_logs')
@@ -61,7 +62,7 @@ const load = async (dateForValues) => {
 
 useEffect(() => { load(logDate) }, [logDate])
 
-const targetFor = (e) => (e.challenge_type === 'steps' ? e.steps_target : e.daily_target)
+  const targetFor = (e) => (e.challenge_type === 'steps' ? e.steps_target : e.challenge_type === 'workout' ? 45 : e.daily_target)
 
 const handlePhotoChange = (challenge_type, file) => {
   setPhotos((prev) => ({ ...prev, [challenge_type]: file }))
