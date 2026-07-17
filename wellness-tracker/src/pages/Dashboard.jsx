@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { currentMonth, monthLabel, daysElapsedInMonth } from '../lib/dateUtils'
 import { MONTHLY_THEMES } from '../lib/monthlyThemes'
 
-const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition' }
+const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
 const TRAIL_MILESTONE_MILES = 500 // fun collective company goal, tweak as you like
 const TOTAL_EMPLOYEES = 40
 
@@ -39,7 +39,7 @@ const participantIds = new Set(enrollments.map((e) => e.user_id))
   const trailMiles = Math.round(totalSteps / 2000)
   const trailPct = Math.min(100, Math.round((trailMiles / TRAIL_MILESTONE_MILES) * 100))
 
-const byType = ['steps', 'weight', 'water', 'nutrition'].map((type) => {
+const byType = ['steps', 'weight', 'water', 'nutrition', 'workout'].map((type) => {
   const typeEnrollments = enrollments.filter((e) => e.challenge_type === type)
   const typeLogs = logs.filter((l) => l.challenge_type === type)
   let qualifying = 0
