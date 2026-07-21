@@ -157,4 +157,3 @@ if (loading) return <main className="content"><p>Loading…</p></main>
   </main>
   )
     }
-  </label>h
