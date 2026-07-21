@@ -191,3 +191,52 @@ alter table enrollments add column if not exists days_target int check (days_tar
 alter table daily_logs drop constraint if exists daily_logs_challenge_type_check;
 alter table daily_logs add constraint daily_logs_challenge_type_check
   check (challenge_type in ('steps','water','nutrition','workout'));
+
+
+-- ---------- RECOMMENDATIONS ----------
+-- Community wall posts (recipes, apps, nutrition, fitness accessories).
+-- NOTE: if this table already exists in your live Supabase project,
+-- just run: alter table recommendations add column if not exists image_url text;
+create table if not exists recommendations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles(id) on delete cascade,
+  author_name text not null,
+  category text not null check (category in ('recipe','app','nutrition','fitness_accessory')),
+  title text not null,
+  body text,
+  link text,
+  image_url text,
+  created_at timestamptz not null default now()
+  );
+
+alter table recommendations enable row level security;
+
+create policy "Staff can view all recommendations"
+on recommendations for select
+using (auth.role() = 'authenticated');
+
+create policy "Users can post their own recommendations"
+on recommendations for insert
+with check (auth.uid() = user_id);
+
+create policy "Users can delete their own recommendations"
+on recommendations for delete
+using (auth.uid() = user_id);
+
+-- ---------- STORAGE: recommendation images ----------
+-- Public bucket so posted recommendation images can be viewed by anyone with the link.
+insert into storage.buckets (id, name, public)
+values ('recommendation-images', 'recommendation-images', true)
+on conflict (id) do nothing;
+
+create policy "Anyone can view recommendation images"
+on storage.objects for select
+using (bucket_id = 'recommendation-images');
+
+create policy "Authenticated users can upload recommendation images"
+on storage.objects for insert
+with check (bucket_id = 'recommendation-images' and auth.role() = 'authenticated');
+
+create policy "Users can delete their own recommendation images"
+on storage.objects for delete
+using (bucket_id = 'recommendation-images' and auth.uid()::text = (storage.foldername(name))[1]);
