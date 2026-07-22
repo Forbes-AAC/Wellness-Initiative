@@ -8,7 +8,7 @@
   --pine: #1B75BC;
   --pine-dark: #14588F;
   --gold: #A6CE39;
-  --gold-dark: #8AB02E; 
+  --gold-dark: #8AB02E;
   --ridge: #8D9096;
   --ember: #BC4B2C;
   --line: rgba(28, 38, 32, 0.14);
@@ -157,6 +157,30 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
   outline: 2px solid var(--ridge);
   outline-offset: 2px;
+}
+
+input[type="file"] {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+input[type="file"]::file-selector-button,
+input[type="file"]::-webkit-file-upload-button {
+  background: var(--pine);
+  color: var(--paper-raised);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background 0.15s ease;
+}
+
+input[type="file"]::file-selector-button:hover,
+input[type="file"]::-webkit-file-upload-button:hover {
+  background: var(--pine-dark);
 }
 
 .field { margin-bottom: 16px; }
