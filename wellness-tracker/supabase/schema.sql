@@ -240,3 +240,49 @@ with check (bucket_id = 'recommendation-images' and auth.role() = 'authenticated
 create policy "Users can delete their own recommendation images"
 on storage.objects for delete
 using (bucket_id = 'recommendation-images' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ---------- SHOUT-OUTS ----------
+-- Public wall where staff can call out coworkers for wellness wins
+-- (workouts, steps, healthy meals, etc.) with a message, optional photo/meme,
+-- and tags for the coworker(s) being recognized.
+create table if not exists shout_outs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles(id) on delete cascade,
+  author_name text not null,
+  message text not null,
+  image_url text,
+  tagged_user_ids uuid[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+alter table shout_outs enable row level security;
+
+create policy "Staff can view all shout-outs"
+  on shout_outs for select
+  using (auth.role() = 'authenticated');
+
+create policy "Users can post their own shout-outs"
+  on shout_outs for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete their own shout-outs"
+  on shout_outs for delete
+  using (auth.uid() = user_id);
+
+-- ---------- STORAGE: shout-out images ----------
+-- Public bucket so posted shout-out images/memes can be viewed by anyone with the link.
+insert into storage.buckets (id, name, public)
+values ('shout-out-images', 'shout-out-images', true)
+on conflict (id) do nothing;
+
+create policy "Anyone can view shout-out images"
+  on storage.objects for select
+  using (bucket_id = 'shout-out-images');
+
+create policy "Authenticated users can upload shout-out images"
+  on storage.objects for insert
+  with check (bucket_id = 'shout-out-images' and auth.role() = 'authenticated');
+
+create policy "Users can delete their own shout-out images"
+  on storage.objects for delete
+  using (bucket_id = 'shout-out-images' and auth.uid()::text = (storage.foldername(name))[1]);
