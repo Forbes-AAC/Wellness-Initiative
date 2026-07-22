@@ -258,3 +258,7 @@ th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: 
   max-height: 90vh;
   overflow-y: auto;
 }
+
+
+.post-link-title { color: inherit; text-decoration: none; }
+.post-link-title:hover { text-decoration: underline; }
