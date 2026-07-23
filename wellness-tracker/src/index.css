@@ -23,6 +23,10 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   background: var(--paper);
+  background-image: url('./assets/background-pattern.png');
+  background-repeat: repeat;
+  background-size: 640px auto;
+  background-attachment: fixed;
   color: var(--ink);
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
