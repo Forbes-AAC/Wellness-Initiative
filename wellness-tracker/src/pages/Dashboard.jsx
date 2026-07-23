@@ -81,7 +81,8 @@ export default function Dashboard() {
       <div className="eyebrow">{monthLabel(month)} · company wellness</div>
       <h1 style={{ fontSize: 34, marginBottom: 22 }}>Forbes AAC Wellness</h1>
 
-      <div className="card" style={{ marginBottom: 26 }}>
+        <div className="grid-2" style={{ marginBottom: 26 }}>
+  <div className="card">
         <div className="eyebrow" style={{ marginBottom: 10 }}>How the wellness initiative works</div>
         <ul style={{ margin: '0 0 16px', paddingLeft: 20, fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
           <li>The initiative runs through the end of 2026.</li>
@@ -98,7 +99,7 @@ export default function Dashboard() {
       </div>
 
       {theme && (
-        <div className="card" style={{ marginBottom: 26 }}>
+        <div className="card">
           <div className="eyebrow" style={{ marginBottom: 10 }}>This month's focus</div>
           <h3 style={{ fontSize: 20, marginBottom: 10 }}>{theme.theme}</h3>
           <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
@@ -108,6 +109,7 @@ export default function Dashboard() {
           </ul>
         </div>
       )}
+        </div>
       <div className="trail-card" style={{ marginBottom: 26 }}>
         <div className="eyebrow">The company trail</div>
         <h2 style={{ marginBottom: 6 }}>{trailMiles.toLocaleString()} miles logged together</h2>
