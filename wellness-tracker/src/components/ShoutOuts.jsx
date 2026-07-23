@@ -123,12 +123,12 @@ export default function ShoutOuts({ profiles = [], shoutOuts = [], onChanged }) 
         </button>
       </form>
 
-      <div>
+      <div className="grid-3">
         {shoutOuts.length === 0 && (
           <p className="help-text">No shout-outs yet — be the first to celebrate a coworker!</p>
         )}
         {shoutOuts.map((s) => (
-          <div key={s.id} className="card" style={{ marginBottom: 14 }}>
+          <div key={s.id} className="card" style={{padding: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <p className="help-text" style={{ marginBottom: 6 }}>
                 {s.author_name} · {new Date(s.created_at).toLocaleDateString()}
@@ -140,7 +140,7 @@ export default function ShoutOuts({ profiles = [], shoutOuts = [], onChanged }) 
               )}
             </div>
             {s.image_url && (
-              <img src={s.image_url} alt="Shout-out" style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 8 }} />
+              <img src={s.image_url} alt="Shout-out" style={{ maxWidth: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
             )}
             <p style={{ marginBottom: 8 }}>{s.message}</p>
             {s.tagged_user_ids?.length > 0 && (

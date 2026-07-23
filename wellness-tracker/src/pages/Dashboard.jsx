@@ -108,9 +108,6 @@ export default function Dashboard() {
           </ul>
         </div>
       )}
-
-      <ShoutOuts profiles={profiles} shoutOuts={shoutOuts} onChanged={loadAll} />
-
       <div className="trail-card" style={{ marginBottom: 26 }}>
         <div className="eyebrow">The company trail</div>
         <h2 style={{ marginBottom: 6 }}>{trailMiles.toLocaleString()} miles logged together</h2>
@@ -152,6 +149,7 @@ export default function Dashboard() {
           "Qualifying" means hitting your daily goal on more than 90% of the {daysSoFar} day(s) so far this month (or, for the weight challenge, an ending weight lower than your starting weight).
         </p>
       </div>
+      <ShoutOuts profiles={profiles} shoutOuts={shoutOuts} onChanged={loadAll} />
 
       {showEnroll && (
         <EnrollModal
