@@ -8,8 +8,11 @@ export default function Prizes() {
   const month = currentMonth()
   const [prizes, setPrizes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ title: '', description: '', image_url: '' })
+  const [form, setForm] = useState({ title: '', description: '' })
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
   const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState('')
 
   const load = async () => {
     setLoading(true)
@@ -20,14 +23,42 @@ export default function Prizes() {
 
   useEffect(() => { load() }, [])
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
   const addPrize = async (e) => {
     e.preventDefault()
     if (!form.title) return
     setSaving(true)
-    await supabase.from('prizes').insert({ ...form, month, created_by: user.id })
-    setForm({ title: '', description: '', image_url: '' })
+    setMessage('')
+
+    let imageUrl = null
+    if (imageFile) {
+      const path = `${month}/${Date.now()}-${imageFile.name}`
+      const { error: uploadError } = await supabase.storage.from('prize-images').upload(path, imageFile)
+      if (uploadError) {
+        setSaving(false)
+        setMessage(uploadError.message)
+        return
+      }
+      const { data: publicUrlData } = supabase.storage.from('prize-images').getPublicUrl(path)
+      imageUrl = publicUrlData.publicUrl
+    }
+
+    const { error } = await supabase.from('prizes').insert({ title: form.title, description: form.description, image_url: imageUrl, month, created_by: user.id })
     setSaving(false)
-    load()
+    if (error) {
+      setMessage(error.message)
+    } else {
+      setForm({ title: '', description: '' })
+      setImageFile(null)
+      setImagePreview('')
+      load()
+    }
   }
 
   const removePrize = async (id) => {
@@ -72,10 +103,14 @@ export default function Prizes() {
               <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
             <div className="field">
-              <label>Image URL (optional)</label>
-              <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://…" />
+              <label>Photo (optional)</label>
+              <input type="file" accept="image/*" onChange={handleImageChange} />
+              {imagePreview && (
+                <img src={imagePreview} alt="Preview" style={{ marginTop: 8, maxWidth: 160, borderRadius: 8, display: 'block' }} />
+              )}
             </div>
             <button className="btn btn-primary" disabled={saving}>Add prize</button>
+            {message && <span className="help-text" style={{ marginLeft: 12 }}>{message}</span>}
           </form>
         </div>
       )}
