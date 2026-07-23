@@ -293,3 +293,28 @@ create policy "Users can delete their own shout-out images"
 -- (Safe to skip on a brand-new database created from this file.)
 -- =========================================================
 alter table daily_logs add column if not exists workout_type text;
+
+
+-- =========================================================
+-- MIGRATION: run this once to support prize photo uploads
+-- (Safe to skip on a brand-new database created from this file.)
+-- =========================================================
+
+-- ---------- STORAGE: prize images ----------
+-- Public bucket so posted prize photos can be viewed by anyone with the link.
+-- Only admins can upload/delete, matching the "prizes" table policies above.
+insert into storage.buckets (id, name, public)
+values ('prize-images', 'prize-images', true)
+on conflict (id) do nothing;
+
+create policy "Anyone can view prize images"
+on storage.objects for select
+using (bucket_id = 'prize-images');
+
+create policy "Admins can upload prize images"
+on storage.objects for insert
+with check (bucket_id = 'prize-images' and exists (select 1 from profiles where id = auth.uid() and is_admin = true));
+
+create policy "Admins can delete prize images"
+on storage.objects for delete
+using (bucket_id = 'prize-images' and exists (select 1 from profiles where id = auth.uid() and is_admin = true));
