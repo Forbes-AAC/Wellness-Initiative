@@ -286,3 +286,10 @@ create policy "Authenticated users can upload shout-out images"
 create policy "Users can delete their own shout-out images"
   on storage.objects for delete
   using (bucket_id = 'shout-out-images' and auth.uid()::text = (storage.foldername(name))[1]);
+
+
+-- =========================================================
+-- MIGRATION: run this once to support workout type + optional photo
+-- (Safe to skip on a brand-new database created from this file.)
+-- =========================================================
+alter table daily_logs add column if not exists workout_type text;
