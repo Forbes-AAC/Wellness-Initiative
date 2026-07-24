@@ -350,3 +350,12 @@ using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1
 create policy "Users can delete their own avatar"
 on storage.objects for delete
 using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- =========================================================
+-- MIGRATION: run this once to support prize size tiers
+-- (big / medium / small). Winners choose 1 Big, OR 2 Medium,
+-- OR 3 Small prizes.
+-- (Safe to skip on a brand-new database created from this file.)
+-- =========================================================
+alter table prizes add column if not exists size text check (size in ('big','medium','small'));
+
