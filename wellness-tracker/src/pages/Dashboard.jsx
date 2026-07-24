@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { currentMonth, monthLabel, daysElapsedInMonth } from '../lib/dateUtils'
 import { MONTHLY_THEMES } from '../lib/monthlyThemes'
 import ShoutOuts from '../components/ShoutOuts'
+import { useNavigate } from 'react-router-dom'
+import Avatar from '../components/Avatar'
 
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
 const TRAIL_MILESTONE_MILES = 500 // fun collective company goal, tweak as you like
@@ -11,6 +13,7 @@ const TOTAL_EMPLOYEES = 40
 
 export default function Dashboard() {
   const { user, profile, refreshProfile } = useAuth()
+  const navigate = useNavigate()
   const month = currentMonth()
   const [loading, setLoading] = useState(true)
   const [enrollments, setEnrollments] = useState([])
@@ -120,7 +123,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid-2" style={{ marginBottom: 18 }}>
-        <StatCard label="Active participants" value={enrolledCount} />
+                  <StatCard label="Active participants" value={enrolledCount} onClick={() => navigate('/participants')} />
         <StatCard label="% of employees enrolled" value={`${enrolledPct}%`} />
       </div>
 
@@ -165,9 +168,9 @@ export default function Dashboard() {
   )
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, onClick }) {
   return (
-    <div className="card">
+    <div className="card" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
       <div className="stat-number">{value}</div>
       <div className="stat-label">{label}</div>
     </div>
@@ -180,19 +183,45 @@ function EnrollModal({ userId, defaultName, onClose, onEnrolled }) {
   const [tracker, setTracker] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
 
-  const submit = async (e) => {
-    e.preventDefault()
-    setSaving(true)
-    setError('')
-    const { error: err } = await supabase
-      .from('profiles')
-      .update({ full_name: name, big_goal: goal, fitness_tracker: tracker, enrolled_at: new Date().toISOString() })
-      .eq('id', userId)
-    setSaving(false)
-    if (err) setError(err.message)
-    else onEnrolled()
+  const handleImageChange = (e) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
   }
+
+const submit = async (e) => {
+      e.preventDefault()
+      setSaving(true)
+      setError('')
+
+      let avatarUrl = null
+      if (imageFile) {
+              const path = `${userId}/${Date.now()}-${imageFile.name}`
+              const { error: upErr } = await supabase.storage.from('avatars').upload(path, imageFile)
+              if (upErr) {
+                        setSaving(false)
+                        setError(upErr.message)
+                        return
+              }
+              const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
+              avatarUrl = pub.publicUrl
+      }
+
+      const updates = { full_name: name, big_goal: goal, fitness_tracker: tracker, enrolled_at: new Date().toISOString() }
+      if (avatarUrl) updates.avatar_url = avatarUrl
+
+      const { error: err } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId)
+      setSaving(false)
+      if (err) setError(err.message)
+      else onEnrolled()
+}
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -214,6 +243,15 @@ function EnrollModal({ userId, defaultName, onClose, onEnrolled }) {
             <label>Fitness tracker / monitor you purchased</label>
             <input type="text" value={tracker} onChange={(e) => setTracker(e.target.value)} placeholder="e.g. Fitbit Charge 6" />
           </div>
+            <div className="field">
+              <label>Profile picture (optional)</label>
+              <input type="file" accept="image/*" onChange={handleImageChange} />
+              {imagePreview && (
+                <div style={{ marginTop: 10 }}>
+                  <Avatar name={name} url={imagePreview} size={56} />
+                </div>
+              )}
+            </div>
           {error && <p className="error-text">{error}</p>}
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Complete enrollment'}</button>
