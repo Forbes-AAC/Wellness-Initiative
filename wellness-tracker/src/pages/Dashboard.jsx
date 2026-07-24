@@ -84,7 +84,26 @@ export default function Dashboard() {
       <div className="eyebrow">{monthLabel(month)} · company wellness</div>
       <h1 style={{ fontSize: 34, marginBottom: 22 }}>Forbes AAC Wellness</h1>
 
-        <div className="grid-2" style={{ marginBottom: 26 }}>
+        <div className="trail-card" style={{ marginBottom: 26 }}>
+          <div className="eyebrow">The company trail</div>
+          <h2 style={{ marginBottom: 6 }}>{trailMiles.toLocaleString()} miles logged together</h2>
+          <p style={{ opacity: 0.85, marginBottom: 18, fontSize: 14 }}>
+            Every step everyone logs this month adds to the trail. Milestone: {TRAIL_MILESTONE_MILES} miles.
+          </p>
+          <TrailSvg pct={trailPct} />
+        </div>
+      
+<div className="grid-2" style={{ marginBottom: 18 }}>
+  <StatCard label="Active participants" value={enrolledCount} onClick={() => navigate('/participants')} />
+  <StatCard label="% of employees enrolled" value={`${enrolledPct}%`} />
+</div>
+      
+<div className="grid-3" style={{ marginBottom: 26 }}>
+  <StatCard label="Total challenge entries" value={enrollments.length} />
+  <StatCard label="Avg. logs per person" value={avgLogsPerParticipant} />
+  <StatCard label="Prizes on the table" value={prizeCount} />
+</div>
+      <div className="grid-2" style={{ marginBottom: 26 }}>
   <div className="card">
         <div className="eyebrow" style={{ marginBottom: 10 }}>How the wellness initiative works</div>
         <ul style={{ margin: '0 0 16px', paddingLeft: 20, fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
@@ -113,25 +132,6 @@ export default function Dashboard() {
         </div>
       )}
         </div>
-      <div className="trail-card" style={{ marginBottom: 26 }}>
-        <div className="eyebrow">The company trail</div>
-        <h2 style={{ marginBottom: 6 }}>{trailMiles.toLocaleString()} miles logged together</h2>
-        <p style={{ opacity: 0.85, marginBottom: 18, fontSize: 14 }}>
-          Every step everyone logs this month adds to the trail. Milestone: {TRAIL_MILESTONE_MILES} miles.
-        </p>
-        <TrailSvg pct={trailPct} />
-      </div>
-
-      <div className="grid-2" style={{ marginBottom: 18 }}>
-                  <StatCard label="Active participants" value={enrolledCount} onClick={() => navigate('/participants')} />
-        <StatCard label="% of employees enrolled" value={`${enrolledPct}%`} />
-      </div>
-
-      <div className="grid-3" style={{ marginBottom: 26 }}>
-        <StatCard label="Total challenge entries" value={enrollments.length} />
-        <StatCard label="Avg. logs per person" value={avgLogsPerParticipant} />
-        <StatCard label="Prizes on the table" value={prizeCount} />
-      </div>
 
       <div className="card">
         <h3 style={{ fontSize: 18, marginBottom: 14 }}>Challenge breakdown — {monthLabel(month)}</h3>
