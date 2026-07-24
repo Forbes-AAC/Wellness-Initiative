@@ -318,3 +318,35 @@ with check (bucket_id = 'prize-images' and exists (select 1 from profiles where 
 create policy "Admins can delete prize images"
 on storage.objects for delete
 using (bucket_id = 'prize-images' and exists (select 1 from profiles where id = auth.uid() and is_admin = true));
+
+
+-- =========================================================
+-- MIGRATION: run this once to support profile pictures + the
+-- Active Participants page.
+-- (Safe to skip on a brand-new database created from this file.)
+-- =========================================================
+alter table profiles add column if not exists avatar_url text;
+
+-- ---------- STORAGE: avatars ----------
+-- Public bucket so profile photos can be viewed by anyone with the link.
+-- Each person can only upload/update/delete files inside their own
+-- user-id folder (matches the shout-out-images pattern above).
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+create policy "Anyone can view avatars"
+on storage.objects for select
+using (bucket_id = 'avatars');
+
+create policy "Users can upload their own avatar"
+on storage.objects for insert
+with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "Users can update their own avatar"
+on storage.objects for update
+using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "Users can delete their own avatar"
+on storage.objects for delete
+using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
