@@ -103,9 +103,19 @@ export default function Drawing() {
           return (
             <div className="card" key={type}>
               <h3 style={{ fontSize: 18, marginBottom: 8 }}>{TYPE_LABEL[type]}</h3>
-              <p className="help-text" style={{ marginBottom: 12 }}>
+              <p className="help-text" style={{ marginBottom: 8 }}>
                 {pool.length} eligible participant{pool.length === 1 ? '' : 's'} this month
               </p>
+
+              {pool.length > 0 && (
+                <ul style={{ margin: '0 0 14px', paddingLeft: 18, maxHeight: 140, overflowY: 'auto' }}>
+                  {pool.map((p) => (
+                    <li key={p.enrollment_id || p.user_id} style={{ fontSize: 14, marginBottom: 2 }}>
+                      {nameFor(p.user_id)}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {winner ? (
                 <>
