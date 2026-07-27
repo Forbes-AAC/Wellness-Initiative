@@ -22,6 +22,15 @@ export default function Recommendations() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
+  const [editingId, setEditingId] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editBody, setEditBody] = useState('')
+  const [editLink, setEditLink] = useState('')
+  const [editImageFile, setEditImageFile] = useState(null)
+  const [editImagePreview, setEditImagePreview] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editMessage, setEditMessage] = useState('')
+
   const load = async () => {
     setLoading(true)
     const { data } = await supabase.from('recommendations').select('*').order('created_at', { ascending: false })
@@ -85,6 +94,68 @@ export default function Recommendations() {
     load()
   }
 
+  const startEdit = (p) => {
+    setEditingId(p.id)
+    setEditTitle(p.title || '')
+    setEditBody(p.body || '')
+    setEditLink(p.link || '')
+    setEditImageFile(null)
+    setEditImagePreview(p.image_url || '')
+    setEditMessage('')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditImageFile(null)
+    setEditImagePreview('')
+    setEditMessage('')
+  }
+
+  const handleEditImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setEditImageFile(file)
+    setEditImagePreview(URL.createObjectURL(file))
+  }
+
+  const saveEdit = async (e, p) => {
+    e.preventDefault()
+    if (!editTitle.trim()) return
+    setEditSaving(true)
+    setEditMessage('')
+
+    let imageUrl = p.image_url || null
+    if (editImageFile) {
+      const path = `${user.id}/${Date.now()}-${editImageFile.name}`
+      const { error: uploadError } = await supabase.storage.from('recommendation-images').upload(path, editImageFile)
+      if (uploadError) {
+        setEditSaving(false)
+        setEditMessage(uploadError.message)
+        return
+      }
+      const { data: publicUrlData } = supabase.storage.from('recommendation-images').getPublicUrl(path)
+      imageUrl = publicUrlData.publicUrl
+    }
+
+    const { error } = await supabase
+      .from('recommendations')
+      .update({
+        title: editTitle.trim(),
+        body: editBody.trim() || null,
+        link: editLink.trim() || null,
+        image_url: imageUrl,
+      })
+      .eq('id', p.id)
+
+    setEditSaving(false)
+    if (error) {
+      setEditMessage(error.message)
+    } else {
+      setEditingId(null)
+      load()
+    }
+  }
+
   const filtered = posts.filter((p) => p.category === active)
   const activeLabel = CATEGORIES.find((c) => c.key === active)?.label
 
@@ -140,21 +211,57 @@ export default function Recommendations() {
         <div className="grid-3">
           {filtered.map((p) => (
             <div key={p.id} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <h3 style={{ fontSize: 18, marginBottom: 4 }}>
-                  {p.link ? (
-                    <a href={p.link} target="_blank" rel="noreferrer" className="post-link-title">{p.title}</a>
-                  ) : p.title}
-                </h3>
-                {p.user_id === user.id && (
-                  <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => remove(p.id)}>Delete</button>
-                )}
-              </div>
-              {p.image_url && (
-                <img src={p.image_url} alt={p.title} style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 8 }} />
+              {editingId === p.id ? (
+                <form onSubmit={(e) => saveEdit(e, p)}>
+                  <div className="field" style={{ marginBottom: 12 }}>
+                    <label>Title</label>
+                    <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                  </div>
+                  <div className="field" style={{ marginBottom: 12 }}>
+                    <label>Link (optional)</label>
+                    <input type="text" value={editLink} onChange={(e) => setEditLink(e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div className="field" style={{ marginBottom: 12 }}>
+                    <label>Details</label>
+                    <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={3} />
+                  </div>
+                  <div className="field" style={{ marginBottom: 12 }}>
+                    <label>Photo (optional)</label>
+                    <input type="file" accept="image/*" onChange={handleEditImageChange} />
+                    {editImagePreview && (
+                      <img src={editImagePreview} alt="Preview" style={{ marginTop: 8, maxWidth: 160, borderRadius: 8, display: 'block' }} />
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-primary" type="submit" disabled={editSaving || !editTitle.trim()}>
+                      {editSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button className="btn btn-outline" type="button" onClick={cancelEdit}>Cancel</button>
+                  </div>
+                  {editMessage && <p className="help-text" style={{ marginTop: 8 }}>{editMessage}</p>}
+                </form>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ fontSize: 18, marginBottom: 4 }}>
+                      {p.link ? (
+                        <a href={p.link} target="_blank" rel="noreferrer" className="post-link-title">{p.title}</a>
+                      ) : p.title}
+                    </h3>
+                    {p.user_id === user.id && (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => startEdit(p)}>Edit</button>
+                        <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => remove(p.id)}>Delete</button>
+                      </div>
+                    )}
+                  </div>
+                  {p.image_url && (
+                    <img src={p.image_url} alt={p.title} style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 8 }} />
+                  )}
+                  {p.body && <p style={{ marginBottom: 8 }}>{p.body}</p>}
+                  <p className="help-text">{p.author_name} · {new Date(p.created_at).toLocaleDateString()}</p>
+                </>
               )}
-              {p.body && <p style={{ marginBottom: 8 }}>{p.body}</p>}
-              <p className="help-text">{p.author_name} · {new Date(p.created_at).toLocaleDateString()}</p>
             </div>
           ))}
         </div>
