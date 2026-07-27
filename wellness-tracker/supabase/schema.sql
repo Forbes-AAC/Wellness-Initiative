@@ -359,3 +359,35 @@ using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1
 -- =========================================================
 alter table prizes add column if not exists size text check (size in ('big','medium','small'));
 
+
+
+-- =========================================================
+-- WINNERS: prize drawing history
+-- One row per challenge, per month, once a winner has been
+-- drawn. Enforces that nobody can be drawn twice for the
+-- same challenge type (see app-level check) and that only
+-- one winner is recorded per challenge per month.
+-- =========================================================
+create table if not exists winners (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles(id) on delete cascade,
+  challenge_type text not null check (challenge_type in ('steps','weight','water','nutrition','workout')),
+  month text not null,
+  drawn_by uuid references profiles(id),
+  drawn_at timestamptz not null default now(),
+  unique (challenge_type, month)
+);
+
+alter table winners enable row level security;
+
+create policy "Staff can view winners"
+on winners for select
+using (auth.role() = 'authenticated');
+
+create policy "Only admins can record a winner"
+on winners for insert
+with check (exists (select 1 from profiles where id = auth.uid() and is_admin = true));
+
+create policy "Only admins can clear a winner"
+on winners for delete
+using (exists (select 1 from profiles where id = auth.uid() and is_admin = true));
