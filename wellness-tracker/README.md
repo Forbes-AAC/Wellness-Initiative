@@ -10,6 +10,7 @@ water, and nutrition challenges, with a company-wide dashboard and a prize board
 - **Challenges** (`/challenges`) — enroll each month: pick a step level (8k/10k/12k/20k),
   log start/end weight, or set a water/calorie target using the built-in calculators.
 - **Prizes** (`/prizes`) — what's up for the monthly drawing; admins can add/remove prizes.
+- **Drawing** (`/drawing`, admin only) — see who's eligible for each challenge's monthly drawing and draw a winner with one click.
 
 Anyone who hits their daily goal on **more than 90% of the days in the month** (or, for the
 weight challenge, ends the month lighter than they started) qualifies for that month's drawing.
@@ -61,8 +62,8 @@ npm run dev
   new month just means people re-enroll — no manual reset needed.
 - **Trail milestone**: the "500 miles" company milestone on the dashboard is just a fun default —
   change `TRAIL_MILESTONE_MILES` in `src/pages/Dashboard.jsx` to whatever fits your team size.
-- **Drawing itself**: this app tracks *who qualifies*, but doesn't auto-pick a winner — that's
-  intentionally left as a manual step (query the `monthly_qualification` view in Supabase, or
-  just check the dashboard's "on track" counts) so someone runs the actual drawing.
+- **Drawing itself**: admins can now go to `/drawing` at the end of each month and click
+  "Draw a winner" for each challenge — it randomly picks from that month's qualified
+      participants and won't pick anyone who has already won that same challenge before.
 - **Prize images**: paste any public image URL when adding a prize (e.g. from Google Drive
   set to "anyone with the link," or an image host).
