@@ -9,6 +9,7 @@ import Challenges from './pages/Challenges'
 import Prizes from './pages/Prizes'
 import Recommendations from './pages/Recommendations'
 import Participants from './pages/Participants'
+import Drawing from './pages/Drawing'
 
 export default function App() {
   const { user, loading, passwordRecovery } = useAuth()
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/prizes" element={<Prizes />} />
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/participants" element={<Participants />} />
+        <Route path="/drawing" element={<Drawing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

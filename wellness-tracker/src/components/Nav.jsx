@@ -21,8 +21,11 @@ export default function Nav() {
         <NavLink to="/challenges" className={({ isActive }) => (isActive ? 'active' : '')}>Challenges</NavLink>
         <NavLink to="/prizes" className={({ isActive }) => (isActive ? 'active' : '')}>Prizes</NavLink>
         <NavLink to="/recommendations" className={({ isActive }) => (isActive ? 'active' : '')}>Recommendations</NavLink>
-      <NavLink to="/participants" className={({ isActive }) => (isActive ? 'active' : '')}>Participants</NavLink> 
-    </nav>
+        <NavLink to="/participants" className={({ isActive }) => (isActive ? 'active' : '')}>Participants</NavLink>
+        {profile?.is_admin && (
+          <NavLink to="/drawing" className={({ isActive }) => (isActive ? 'active' : '')}>Drawing</NavLink>
+        )}
+      </nav>
       <div className="user-chip">
         <button
           onClick={() => setShowAvatarModal(true)}
