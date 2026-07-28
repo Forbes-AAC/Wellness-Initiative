@@ -6,6 +6,7 @@ import { MONTHLY_THEMES } from '../lib/monthlyThemes'
 import ShoutOuts from '../components/ShoutOuts'
 import { useNavigate } from 'react-router-dom'
 import Avatar from '../components/Avatar'
+import MyStats from '../components/MyStats'
 
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
 const TRAIL_MILESTONE_MILES = 500 // fun collective company goal, tweak as you like
@@ -103,6 +104,7 @@ export default function Dashboard() {
   <StatCard label="Avg. logs per person" value={avgLogsPerParticipant} />
   <StatCard label="Prizes on the table" value={prizeCount} />
 </div>
+      <MyStats userId={user?.id} />
       <div className="grid-2" style={{ marginBottom: 26 }}>
   <div className="card">
         <div className="eyebrow" style={{ marginBottom: 10 }}>How the wellness initiative works</div>
