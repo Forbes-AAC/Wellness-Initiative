@@ -7,6 +7,7 @@ import ShoutOuts from '../components/ShoutOuts'
 import { useNavigate } from 'react-router-dom'
 import Avatar from '../components/Avatar'
 import MyStats from '../components/MyStats'
+import wellnessHero from '../assets/wellness-hero.png'
 
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
 const TRAIL_MILESTONE_MILES = 500 // fun collective company goal, tweak as you like
@@ -85,15 +86,18 @@ export default function Dashboard() {
       <div className="eyebrow">{monthLabel(month)} · company wellness</div>
       <h1 style={{ fontSize: 34, marginBottom: 22 }}>Forbes AAC Wellness</h1>
 
-        <div className="trail-card" style={{ marginBottom: 26 }}>
-          <div className="eyebrow">The company trail</div>
-          <h2 style={{ marginBottom: 6 }}>{trailMiles.toLocaleString()} miles logged together</h2>
-          <p style={{ opacity: 0.85, marginBottom: 18, fontSize: 14 }}>
-            Every step everyone logs this month adds to the trail. Milestone: {TRAIL_MILESTONE_MILES} miles.
-          </p>
-          <TrailSvg pct={trailPct} />
+        <div className="trail-card-wrap" style={{ marginBottom: 26 }}>
+          <div className="trail-card">
+            <div className="eyebrow">The company trail</div>
+            <h2 style={{ marginBottom: 6 }}>{trailMiles.toLocaleString()} miles logged together</h2>
+            <p style={{ opacity: 0.85, marginBottom: 18, fontSize: 14, maxWidth: '62%' }}>
+              Every step everyone logs this month adds to the trail. Milestone: {TRAIL_MILESTONE_MILES} miles.
+            </p>
+            <TrailSvg pct={trailPct} />
+          </div>
+          <img src={wellnessHero} alt="" aria-hidden="true" className="trail-mascot" />
         </div>
-      
+
 <div className="grid-2" style={{ marginBottom: 18 }}>
   <StatCard label="Active participants" value={enrolledCount} onClick={() => navigate('/participants')} />
   <StatCard label="% of employees enrolled" value={`${enrolledPct}%`} />
