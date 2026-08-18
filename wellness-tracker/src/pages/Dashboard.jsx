@@ -7,7 +7,7 @@ import ShoutOuts from '../components/ShoutOuts'
 import { useNavigate } from 'react-router-dom'
 import Avatar from '../components/Avatar'
 import MyStats from '../components/MyStats'
-import wellnessHero from '../assets/wellness-hero.png'
+import wellnessHero from '../assets/wellness-hero.webp'
 
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
 const TRAIL_MILESTONE_MILES = 500 // fun collective company goal, tweak as you like
