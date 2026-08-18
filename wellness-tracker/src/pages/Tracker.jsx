@@ -88,6 +88,19 @@ export default function Tracker() {
     setLogDate(date)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+  
+  const handleDelete = async (row) => {
+    const ok = window.confirm(`Delete your ${LABELS[row.challenge_type]?.label || row.challenge_type} entry for ${row.log_date}?`)
+    if (!ok) return
+    setMessage('')
+    const { error } = await supabase.from('daily_logs').delete().eq('id', row.id)
+    if (error) {
+      setMessage(error.message)
+    } else {
+      setMessage(`${LABELS[row.challenge_type]?.label || row.challenge_type} entry for ${row.log_date} deleted.`)
+      load(logDate)
+    }
+  }
 
   const save = async (challenge_type, target) => {
     const value = Number(values[challenge_type])
@@ -246,7 +259,7 @@ export default function Tracker() {
         <h3 style={{ fontSize: 18, marginBottom: 14 }}>This month's history</h3>
         <table>
           <thead>
-            <tr><th>Date</th><th>Challenge</th><th>Value</th><th>Goal met</th><th>Photo</th><th>Edit</th></tr>
+            <tr><th>Date</th><th>Challenge</th><th>Value</th><th>Goal met</th><th>Photo</th><th>Edit</th><th>Delete</th></tr>
           </thead>
           <tbody>
             {history.map((h) => (
@@ -257,10 +270,11 @@ export default function Tracker() {
                 <td><span className={`badge ${h.goal_met ? 'badge-on' : 'badge-off'}`}>{h.goal_met ? 'Yes' : 'No'}</span></td>
                 <td>{h.photo_url ? <a href={h.photo_url} target="_blank" rel="noreferrer">View</a> : '—'}</td>
                 <td><button className="btn btn-outline" style={{ padding: '6px 14px', fontSize: 12 }} onClick={() => handleEdit(h.log_date)}>Edit</button></td>
+                <td><button className="btn btn-danger" style={{ padding: '6px 14px', fontSize: 12 }} onClick={() => handleDelete(h)}>Delete</button></td>
               </tr>
             ))}
             {history.length === 0 && (
-              <tr><td colSpan={6} className="help-text">No entries logged yet this month.</td></tr>
+              <tr><td colSpan={7} className="help-text">No entries logged yet this month.</td></tr>
             )}
           </tbody>
         </table>
