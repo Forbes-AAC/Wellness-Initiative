@@ -143,7 +143,7 @@ export default function Prizes() {
       <div className="card" style={{ marginBottom: 26, maxWidth: 620 }}>
         <strong style={{ display: 'block', marginBottom: 8 }}>Prize key</strong>
         <p className="help-text" style={{ margin: 0 }}>
-          If you win the drawing, choose <span className="badge badge-big">Big</span> ×1, <span className="badge badge-medium">Medium</span> ×2, or <span className="badge badge-small">Small</span> ×3.
+                    If you win the drawing, choose <span className="badge badge-big">Big</span> ×1, <span className="badge badge-medium">Medium</span> ×2, <span className="badge badge-small">Small</span> ×4, or <span className="badge badge-medium">Medium</span> ×1 + <span className="badge badge-small">Small</span> ×2.
         </p>
       </div>
 
@@ -165,7 +165,7 @@ export default function Prizes() {
                   <select value={editForm.size} onChange={(e) => setEditForm({ ...editForm, size: e.target.value })} required>
                     <option value="big">Big (choose 1 if you win)</option>
                     <option value="medium">Medium (choose 2 if you win)</option>
-                    <option value="small">Small (choose 3 if you win)</option>
+                    <option value="small">Small (choose 4 if you win)</option>
                   </select>
                 </div>
                 <div className="field">
@@ -217,7 +217,7 @@ export default function Prizes() {
               <select value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })} required>
                 <option value="big">Big (choose 1 if you win)</option>
                 <option value="medium">Medium (choose 2 if you win)</option>
-                <option value="small">Small (choose 3 if you win)</option>
+                <option value="small">Small (choose 4 if you win)</option>
               </select>
             </div>
             <div className="field">
