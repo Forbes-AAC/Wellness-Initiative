@@ -8,6 +8,7 @@ import Avatar from './Avatar'
 export default function Nav() {
   const { profile, signOut } = useAuth()
   const [showAvatarModal, setShowAvatarModal] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header className="topbar">
@@ -15,7 +16,15 @@ export default function Nav() {
         <img src={forbesLogo} alt="Forbes AAC" style={{ height: 28 }} />
         <span className="display" style={{ fontSize: 16 }}>Wellness</span>
       </div>
-      <nav className="nav-links">
+      <button
+        className="nav-toggle"
+        onClick={() => setMenuOpen((open) => !open)}
+        aria-label="Toggle navigation menu"
+        aria-expanded={menuOpen}
+      >
+        ☰
+      </button>
+      <nav className={`nav-links ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(false)}>
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>Dashboard</NavLink>
         <NavLink to="/tracker" className={({ isActive }) => (isActive ? 'active' : '')}>Tracker</NavLink>
         <NavLink to="/challenges" className={({ isActive }) => (isActive ? 'active' : '')}>Challenges</NavLink>

@@ -63,6 +63,18 @@ button, input, select { font-family: inherit; font-size: inherit; }
 
 .nav-links { display: flex; gap: 4px; align-items: center; }
 
+.nav-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  color: var(--paper-raised);
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
 .nav-links a {
   color: var(--paper-raised);
   text-decoration: none;
@@ -255,7 +267,26 @@ th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: 
 
 @media (max-width: 760px) {
   .grid-3, .grid-2, .grid-4, .form-grid { grid-template-columns: 1fr; }
-  .nav-links { display: none; }
+
+  .nav-toggle { display: inline-flex; }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: var(--pine-dark);
+    padding: 8px 16px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .nav-links.open { display: flex; }
+
+  .nav-links a { padding: 12px 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
