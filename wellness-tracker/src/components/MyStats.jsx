@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { currentMonth, monthLabel, todayISO } from '../lib/dateUtils'
 import { BONUS_CHALLENGES, BONUS_CHALLENGE_KEYS } from '../lib/bonusChallenges'
+import { CHALLENGE_ICONS } from '../lib/challengeIcons'
 
 const TYPE_LABEL = {
   steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout',
@@ -97,7 +98,10 @@ export default function MyStats({ userId }) {
 
           return (
             <div key={type} className="card" style={{ background: 'rgba(28,38,32,0.03)' }}>
-              <h3 style={{ fontSize: 16, marginBottom: 8 }}>{TYPE_LABEL[type]}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <img src={CHALLENGE_ICONS[type]} alt="" style={{ width: 24, height: 24 }} />
+                <h3 style={{ fontSize: 16, margin: 0 }}>{TYPE_LABEL[type]}</h3>
+              </div>
               {isWeight ? (
                 <p style={{ fontSize: 14, marginBottom: 10, color: 'var(--ink-soft)' }}>
                   {enrollment.starting_weight != null && enrollment.ending_weight != null
