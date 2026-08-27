@@ -23,6 +23,23 @@ const TYPES = [
 
 const WORKOUT_DAY_OPTIONS = [3, 4, 5]
 
+const BONUS_CHALLENGES = [
+  {
+    title: '60-Second Recovery Challenge',
+    cadence: '5 days / week',
+    description: 'Take one real break between meetings each day — stand, stretch, breathe, or pray.',
+  },
+  {
+    title: 'Morning Ritual Challenge',
+    description: 'Wake 5–10 minutes earlier for a phone-free start: sunlight, quiet reflection/prayer, or gratitude journaling before your workday.',
+  },
+  {
+    title: 'Phone-Free Lunch Challenge',
+    cadence: '5 days / week',
+    description: 'Eat without a screen for 5 days.',
+  },
+]
+
 export default function Challenges() {
   const  { user, profile  } = useAuth()
   const month = currentMonth()
@@ -110,6 +127,26 @@ Before picking a challenge, complete the quick enrollment form on your Dashboard
       {active === 'workout' && (
         <WorkoutPanel enrollment={enrollments.workout} onSave={(v) => upsert('workout', { days_target: v.days_target })} onLeave={() => leave('workout')} saving={saving} />
       )}
+
+      <hr className="divider" style={{ marginTop: 40 }} />
+
+      <div className="eyebrow" style={{ marginBottom: 6 }}>Bonus</div>
+      <h2 style={{ fontSize: 24, marginBottom: 6 }}>Mind &amp; Spirit Challenges</h2>
+      <p className="help-text" style={{ marginBottom: 18, maxWidth: 640 }}>
+        Optional habit-building challenges for whole-person wellness. These are just for you — they don't count toward the monthly prize drawing.
+      </p>
+      <div className="grid-3">
+        {BONUS_CHALLENGES.map((c) => (
+          <div key={c.title} className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <h3 style={{ fontSize: 16 }}>{c.title}</h3>
+            </div>
+            {c.cadence && <div className="eyebrow" style={{ marginTop: 4 }}>{c.cadence}</div>}
+            <p className="help-text" style={{ marginTop: 8 }}>{c.description}</p>
+            <span className="badge badge-off" style={{ marginTop: 12 }}>Not prize-eligible</span>
+          </div>
+        ))}
+      </div>
     </main>
   )
 }
