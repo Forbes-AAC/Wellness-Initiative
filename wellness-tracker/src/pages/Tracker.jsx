@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { currentMonth, todayISO } from '../lib/dateUtils'
 import { BONUS_CHALLENGES, BONUS_CHALLENGE_KEYS } from '../lib/bonusChallenges'
+import { CHALLENGE_ICONS } from '../lib/challengeIcons'
 
 const LABELS = {
   steps: { label: 'Steps', unit: 'steps' },
@@ -199,7 +200,10 @@ export default function Tracker() {
           const met = isHabit ? Number(value) === 1 : (value !== '' && Number(value) >= target)
           return (
             <div className="card" key={e.id}>
-              <div className="eyebrow">{LABELS[e.challenge_type].label}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <img src={CHALLENGE_ICONS[e.challenge_type]} alt="" style={{ width: 28, height: 28 }} />
+                <div className="eyebrow">{LABELS[e.challenge_type].label}</div>
+              </div>
               <p className="help-text" style={{ marginBottom: 10 }}>
                 {isHabit ? 'Check the box on days you complete this habit.' : `Goal: ${target.toLocaleString()} ${LABELS[e.challenge_type].unit}/day`}
               </p>

@@ -13,6 +13,7 @@ import {
   STEP_LEVELS,
 } from '../lib/calculators'
 import { BONUS_CHALLENGES } from '../lib/bonusChallenges'
+import { CHALLENGE_ICONS } from '../lib/challengeIcons'
 
 const TYPES = [
   { key: 'steps', label: 'Steps challenge' },
@@ -88,7 +89,8 @@ Before picking a challenge, complete the quick enrollment form on your Dashboard
 
       <div className="tabs">
         {TYPES.map((t) => (
-          <button key={t.key} className={`tab ${active === t.key ? 'active' : ''}`} onClick={() => setActive(t.key)}>
+          <button key={t.key} className={`tab ${active === t.key ? 'active' : ''}`} onClick={() => setActive(t.key)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <img src={CHALLENGE_ICONS[t.key]} alt="" style={{ width: 20, height: 20, borderRadius: '50%' }} />
             {t.label} {enrollments[t.key] && '✓'}
           </button>
         ))}
@@ -124,8 +126,11 @@ Before picking a challenge, complete the quick enrollment form on your Dashboard
           const enrolled = !!enrollments[c.key]
           return (
             <div key={c.key} className="card">
-              <h3 style={{ fontSize: 16 }}>{c.title}</h3>
-              {c.cadence && <div className="eyebrow" style={{ marginTop: 4 }}>{c.cadence}</div>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <img src={CHALLENGE_ICONS[c.key]} alt="" style={{ width: 40, height: 40 }} />
+                <h3 style={{ fontSize: 16, margin: 0 }}>{c.title}</h3>
+              </div>
+              {c.cadence && <div className="eyebrow" style={{ marginTop: 8 }}>{c.cadence}</div>}
               <p className="help-text" style={{ marginTop: 8 }}>{c.description}</p>
               <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                 <span className="badge badge-off">Not prize-eligible</span>
