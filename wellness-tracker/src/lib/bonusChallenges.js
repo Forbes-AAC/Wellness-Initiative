@@ -11,9 +11,9 @@ export const BONUS_CHALLENGES = [
   },
   {
     key: 'morning_ritual',
-    title: 'Morning Ritual Challenge',
+    title: 'Morning Routine Challenge',
     cadence: null,
-    description: 'Wake 5–10 minutes earlier for a phone-free start: sunlight, quiet reflection/prayer, or gratitude journaling before your workday.',
+    description: 'Wake 5–10 minutes earlier for a phone-free start: sunlight, prayer, reflection, abiding time, and/or gratitude journaling before your workday.',
   },
   {
     key: 'phone_free_lunch',
