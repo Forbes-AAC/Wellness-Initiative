@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { currentMonth, todayISO } from '../lib/dateUtils'
+import { BONUS_CHALLENGES, BONUS_CHALLENGE_KEYS } from '../lib/bonusChallenges'
 
 const LABELS = {
   steps: { label: 'Steps', unit: 'steps' },
   water: { label: 'Water', unit: 'oz' },
   nutrition: { label: 'Calories', unit: 'cal' },
   workout: { label: 'Workout', unit: 'min' },
+  ...Object.fromEntries(BONUS_CHALLENGES.map((c) => [c.key, { label: c.title, habit: true }])),
 }
 
 const WORKOUT_TYPES = ['HIIT', 'Cross Training', 'Cardio', 'Strength Training', 'Recreational Sports', 'Home Workout', 'Other']
@@ -34,7 +36,7 @@ export default function Tracker() {
       .select('*')
       .eq('user_id', user.id)
       .eq('month', month)
-      .in('challenge_type', ['steps', 'water', 'nutrition', 'workout'])
+      .in('challenge_type', ['steps', 'water', 'nutrition', 'workout', ...BONUS_CHALLENGE_KEYS])
 
     const { data: dayRows } = await supabase
       .from('daily_logs')
@@ -78,7 +80,10 @@ export default function Tracker() {
 
   useEffect(() => { load(logDate) }, [logDate])
 
-  const targetFor = (e) => (e.challenge_type === 'steps' ? e.steps_target : e.challenge_type === 'workout' ? 45 : e.daily_target)
+  const targetFor = (e) => {
+    if (LABELS[e.challenge_type]?.habit) return null
+    return e.challenge_type === 'steps' ? e.steps_target : e.challenge_type === 'workout' ? 45 : e.daily_target
+  }
 
   const handlePhotoChange = (challenge_type, file) => {
     setPhotos((prev) => ({ ...prev, [challenge_type]: file }))
@@ -140,13 +145,15 @@ export default function Tracker() {
       ? (workoutTypes.workout === 'Other' ? workoutTypeOther.workout.trim() : workoutTypes.workout)
       : null
 
+    const goal_met = LABELS[challenge_type]?.habit ? value === 1 : value >= target
+
     const { error } = await supabase.from('daily_logs').upsert(
       {
         user_id: user.id,
         challenge_type,
         log_date: logDate,
         value,
-        goal_met: value >= target,
+        goal_met,
         photo_url,
         workout_type,
       },
@@ -187,18 +194,32 @@ export default function Tracker() {
       <div className="grid-3" style={{ marginBottom: 26 }}>
         {enrollments.map((e) => {
           const target = targetFor(e)
-          const value = values[e.challenge_type] ?? ''
-          const met = value !== '' && Number(value) >= target
+          const isHabit = !!LABELS[e.challenge_type]?.habit
+          const value = values[e.challenge_type] ?? (isHabit ? 0 : '')
+          const met = isHabit ? Number(value) === 1 : (value !== '' && Number(value) >= target)
           return (
             <div className="card" key={e.id}>
               <div className="eyebrow">{LABELS[e.challenge_type].label}</div>
-              <p className="help-text" style={{ marginBottom: 10 }}>Goal: {target.toLocaleString()} {LABELS[e.challenge_type].unit}/day</p>
-              <input
-                type="number"
-                value={value}
-                onChange={(ev) => setValues((prev) => ({ ...prev, [e.challenge_type]: ev.target.value }))}
-                placeholder={`${LABELS[e.challenge_type].label} for this day`}
-              />
+              <p className="help-text" style={{ marginBottom: 10 }}>
+                {isHabit ? 'Check the box on days you complete this habit.' : `Goal: ${target.toLocaleString()} ${LABELS[e.challenge_type].unit}/day`}
+              </p>
+              {isHabit ? (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={Number(value) === 1}
+                    onChange={(ev) => setValues((prev) => ({ ...prev, [e.challenge_type]: ev.target.checked ? 1 : 0 }))}
+                  />
+                  I did this today
+                </label>
+              ) : (
+                <input
+                  type="number"
+                  value={value}
+                  onChange={(ev) => setValues((prev) => ({ ...prev, [e.challenge_type]: ev.target.value }))}
+                  placeholder={`${LABELS[e.challenge_type].label} for this day`}
+                />
+              )}
               {e.challenge_type === 'steps' && (
                 <div style={{ marginTop: 10 }}>
                   <label className="help-text" style={{ display: 'block', marginBottom: 6 }}>Upload a photo of your step tracker</label>
@@ -266,7 +287,7 @@ export default function Tracker() {
               <tr key={h.id}>
                 <td>{h.log_date}</td>
                 <td>{LABELS[h.challenge_type]?.label}</td>
-                <td>{h.value.toLocaleString()}</td>
+                <td>{LABELS[h.challenge_type]?.habit ? (h.value === 1 ? 'Done' : 'Not done') : h.value.toLocaleString()}</td>
                 <td><span className={`badge ${h.goal_met ? 'badge-on' : 'badge-off'}`}>{h.goal_met ? 'Yes' : 'No'}</span></td>
                 <td>{h.photo_url ? <a href={h.photo_url} target="_blank" rel="noreferrer">View</a> : '—'}</td>
                 <td><button className="btn btn-outline" style={{ padding: '6px 14px', fontSize: 12 }} onClick={() => handleEdit(h.log_date)}>Edit</button></td>

@@ -12,6 +12,7 @@ import {
   ftInToCm,
   STEP_LEVELS,
 } from '../lib/calculators'
+import { BONUS_CHALLENGES } from '../lib/bonusChallenges'
 
 const TYPES = [
   { key: 'steps', label: 'Steps challenge' },
@@ -22,23 +23,6 @@ const TYPES = [
 ]
 
 const WORKOUT_DAY_OPTIONS = [3, 4, 5]
-
-const BONUS_CHALLENGES = [
-  {
-    title: '60-Second Recovery Challenge',
-    cadence: '5 days / week',
-    description: 'Take one real break between meetings each day — stand, stretch, breathe, or pray.',
-  },
-  {
-    title: 'Morning Ritual Challenge',
-    description: 'Wake 5–10 minutes earlier for a phone-free start: sunlight, quiet reflection/prayer, or gratitude journaling before your workday.',
-  },
-  {
-    title: 'Phone-Free Lunch Challenge',
-    cadence: '5 days / week',
-    description: 'Eat without a screen for 5 days.',
-  },
-]
 
 export default function Challenges() {
   const  { user, profile  } = useAuth()
@@ -136,16 +120,27 @@ Before picking a challenge, complete the quick enrollment form on your Dashboard
         Optional habit-building challenges for whole-person wellness. These are just for you — they don't count toward the monthly prize drawing.
       </p>
       <div className="grid-3">
-        {BONUS_CHALLENGES.map((c) => (
-          <div key={c.title} className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        {BONUS_CHALLENGES.map((c) => {
+          const enrolled = !!enrollments[c.key]
+          return (
+            <div key={c.key} className="card">
               <h3 style={{ fontSize: 16 }}>{c.title}</h3>
+              {c.cadence && <div className="eyebrow" style={{ marginTop: 4 }}>{c.cadence}</div>}
+              <p className="help-text" style={{ marginTop: 8 }}>{c.description}</p>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <span className="badge badge-off">Not prize-eligible</span>
+                {enrolled && <span className="badge badge-on">Joined ✓</span>}
+              </div>
+              <div style={{ marginTop: 14 }}>
+                {enrolled ? (
+                  <button className="btn btn-danger" disabled={saving} onClick={() => leave(c.key)}>Leave challenge</button>
+                ) : (
+                  <button className="btn btn-primary" disabled={saving} onClick={() => upsert(c.key, {})}>Join this month</button>
+                )}
+              </div>
             </div>
-            {c.cadence && <div className="eyebrow" style={{ marginTop: 4 }}>{c.cadence}</div>}
-            <p className="help-text" style={{ marginTop: 8 }}>{c.description}</p>
-            <span className="badge badge-off" style={{ marginTop: 12 }}>Not prize-eligible</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </main>
   )

@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { currentMonth, monthLabel, todayISO } from '../lib/dateUtils'
+import { BONUS_CHALLENGES, BONUS_CHALLENGE_KEYS } from '../lib/bonusChallenges'
 
-const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
-const CHALLENGE_TYPES = ['steps', 'weight', 'water', 'nutrition', 'workout']
+const TYPE_LABEL = {
+  steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout',
+  ...Object.fromEntries(BONUS_CHALLENGES.map((c) => [c.key, c.title])),
+}
+const CHALLENGE_TYPES = ['steps', 'weight', 'water', 'nutrition', 'workout', ...BONUS_CHALLENGE_KEYS]
 
 const toISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
@@ -107,7 +111,9 @@ export default function MyStats({ userId }) {
                   🔥 {streak}-day streak
                 </p>
               )}
-              {qualifies ? (
+              {BONUS_CHALLENGE_KEYS.includes(type) ? (
+                <span className="badge badge-off">Not prize-eligible</span>
+              ) : qualifies ? (
                 <span className="badge badge-on">On track for this month's drawing ✓</span>
               ) : (
                 <span className="badge badge-off">Keep going to qualify</span>
