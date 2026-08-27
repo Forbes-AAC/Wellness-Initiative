@@ -12,6 +12,7 @@ import {
   ftInToCm,
   STEP_LEVELS,
 } from '../lib/calculators'
+import { BONUS_CHALLENGES } from '../lib/bonusChallenges'
 
 const TYPES = [
   { key: 'steps', label: 'Steps challenge' },
@@ -110,6 +111,37 @@ Before picking a challenge, complete the quick enrollment form on your Dashboard
       {active === 'workout' && (
         <WorkoutPanel enrollment={enrollments.workout} onSave={(v) => upsert('workout', { days_target: v.days_target })} onLeave={() => leave('workout')} saving={saving} />
       )}
+
+      <hr className="divider" style={{ marginTop: 40 }} />
+
+      <div className="eyebrow" style={{ marginBottom: 6 }}>Bonus</div>
+      <h2 style={{ fontSize: 24, marginBottom: 6 }}>Mind &amp; Spirit Challenges</h2>
+      <p className="help-text" style={{ marginBottom: 18, maxWidth: 640 }}>
+        Optional habit-building challenges for whole-person wellness. These are just for you — they don't count toward the monthly prize drawing.
+      </p>
+      <div className="grid-3">
+        {BONUS_CHALLENGES.map((c) => {
+          const enrolled = !!enrollments[c.key]
+          return (
+            <div key={c.key} className="card">
+              <h3 style={{ fontSize: 16 }}>{c.title}</h3>
+              {c.cadence && <div className="eyebrow" style={{ marginTop: 4 }}>{c.cadence}</div>}
+              <p className="help-text" style={{ marginTop: 8 }}>{c.description}</p>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <span className="badge badge-off">Not prize-eligible</span>
+                {enrolled && <span className="badge badge-on">Joined ✓</span>}
+              </div>
+              <div style={{ marginTop: 14 }}>
+                {enrolled ? (
+                  <button className="btn btn-danger" disabled={saving} onClick={() => leave(c.key)}>Leave challenge</button>
+                ) : (
+                  <button className="btn btn-primary" disabled={saving} onClick={() => upsert(c.key, {})}>Join this month</button>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </main>
   )
 }

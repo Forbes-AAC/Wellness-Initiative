@@ -45,10 +45,14 @@ create trigger on_auth_user_created
 -- ---------- ENROLLMENTS ----------
 -- One row per person, per challenge type, per month.
 -- challenge_type: 'steps' | 'weight' | 'water' | 'nutrition' | 'workout'
+--   | 'recovery_break' | 'morning_ritual' | 'phone_free_lunch'
+-- (the last three are the "Mind & Spirit" bonus challenges — trackable,
+-- but not prize-eligible; see the winners table and monthly_qualification
+-- view below, which are intentionally scoped to just the first 5 types)
 create table if not exists enrollments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
-    challenge_type text not null check (challenge_type in ('steps','weight','water','nutrition','workout')),
+    challenge_type text not null check (challenge_type in ('steps','weight','water','nutrition','workout','recovery_break','morning_ritual','phone_free_lunch')),
   month text not null, -- format: 'YYYY-MM'
   -- steps challenge
   steps_target int check (steps_target in (8000,10000,12000,20000)),
@@ -86,7 +90,7 @@ create policy "Users delete their own enrollments"
 create table if not exists daily_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references profiles(id) on delete cascade,
-      challenge_type text not null check (challenge_type in ('steps','water','nutrition','workout')),
+      challenge_type text not null check (challenge_type in ('steps','water','nutrition','workout','recovery_break','morning_ritual','phone_free_lunch')),
   log_date date not null,
   value numeric not null,
   goal_met boolean not null default false,
@@ -169,7 +173,10 @@ select
       )
   end as qualifies_for_drawing
 from enrollments e
-join profiles p on p.id = e.user_id;
+join profiles p on p.id = e.user_id
+-- Bonus "Mind & Spirit" challenges (recovery_break, morning_ritual,
+-- phone_free_lunch) are intentionally excluded — they're not prize-eligible.
+where e.challenge_type in ('steps','weight','water','nutrition','workout');
 
 -- =========================================================
 -- Make yourself an admin after you sign up once, by running:
@@ -391,3 +398,23 @@ with check (exists (select 1 from profiles where id = auth.uid() and is_admin = 
 create policy "Only admins can clear a winner"
 on winners for delete
 using (exists (select 1 from profiles where id = auth.uid() and is_admin = true));
+
+
+-- =========================================================
+-- MIGRATION: run this once to support the "Mind & Spirit" bonus
+-- challenges (60-Second Recovery, Morning Ritual, Phone-Free Lunch).
+-- These are trackable like the other challenges (enrollments +
+-- daily_logs) but are intentionally NOT prize-eligible: the winners
+-- table's challenge_type check above is unchanged (still only the
+-- original 5 types), and monthly_qualification above is now scoped
+-- to just those 5 types too, so bonus challenges can never end up
+-- in a prize drawing.
+-- (Safe to skip on a brand-new database created from this file.)
+-- =========================================================
+alter table enrollments drop constraint if exists enrollments_challenge_type_check;
+alter table enrollments add constraint enrollments_challenge_type_check
+  check (challenge_type in ('steps','weight','water','nutrition','workout','recovery_break','morning_ritual','phone_free_lunch'));
+
+alter table daily_logs drop constraint if exists daily_logs_challenge_type_check;
+alter table daily_logs add constraint daily_logs_challenge_type_check
+  check (challenge_type in ('steps','water','nutrition','workout','recovery_break','morning_ritual','phone_free_lunch'));
