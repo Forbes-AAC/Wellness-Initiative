@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+import Avatar from '../components/Avatar'
 
 const CATEGORIES = [
   { key: 'recipe', label: 'Recipes' },
@@ -9,10 +10,54 @@ const CATEGORIES = [
   { key: 'fitness_accessory', label: 'Fitness Accessories' },
 ]
 
+function Dropzone({ preview, onFile }) {
+  const [dragOver, setDragOver] = useState(false)
+  const inputRef = useRef(null)
+
+  const handleFiles = (files) => {
+    const file = files?.[0]
+    if (file) onFile(file)
+  }
+
+  return (
+    <div
+      className={`dropzone ${dragOver ? 'dragover' : ''}`}
+      onClick={() => inputRef.current?.click()}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault()
+        setDragOver(false)
+        handleFiles(e.dataTransfer.files)
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+      {preview ? (
+        <img src={preview} alt="Preview" style={{ maxHeight: 90, borderRadius: 8 }} />
+      ) : (
+        <>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 6 }}>
+            <path d="M4 8a2 2 0 0 1 2-2h1.5l1-1.5h7l1 1.5H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" stroke="currentColor" strokeWidth="1.6" />
+            <circle cx="12" cy="13" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+          </svg>
+          <div>Drag and drop, or click to upload</div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function Recommendations() {
   const { user, profile } = useAuth()
   const [active, setActive] = useState('recipe')
   const [posts, setPosts] = useState([])
+  const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -31,21 +76,26 @@ export default function Recommendations() {
   const [editSaving, setEditSaving] = useState(false)
   const [editMessage, setEditMessage] = useState('')
 
+  const [openMenuId, setOpenMenuId] = useState(null)
+
+  useEffect(() => {
+    const close = () => setOpenMenuId(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [])
+
   const load = async () => {
     setLoading(true)
     const { data } = await supabase.from('recommendations').select('*').order('created_at', { ascending: false })
+    const { data: pf } = await supabase.from('profiles').select('id, avatar_url')
     setPosts(data || [])
+    setProfiles(pf || [])
     setLoading(false)
   }
 
   useEffect(() => { load() }, [])
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
-  }
+  const avatarFor = (userId) => profiles.find((pr) => pr.id === userId)?.avatar_url || null
 
   const submit = async (e) => {
     e.preventDefault()
@@ -111,13 +161,6 @@ export default function Recommendations() {
     setEditMessage('')
   }
 
-  const handleEditImageChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setEditImageFile(file)
-    setEditImagePreview(URL.createObjectURL(file))
-  }
-
   const saveEdit = async (e, p) => {
     e.preventDefault()
     if (!editTitle.trim()) return
@@ -166,7 +209,7 @@ export default function Recommendations() {
       <div className="eyebrow">Community wall</div>
       <h1 style={{ fontSize: 32, marginBottom: 22 }}>Recommendations</h1>
 
-      <div className="tabs">
+      <div className="tabs" style={{ marginBottom: 28 }}>
         {CATEGORIES.map((c) => (
           <button key={c.key} className={`tab ${active === c.key ? 'active' : ''}`} onClick={() => setActive(c.key)}>
             {c.label}
@@ -174,96 +217,127 @@ export default function Recommendations() {
         ))}
       </div>
 
-      <div className="card" style={{ maxWidth: 640, marginBottom: 24 }}>
-        <h3 style={{ fontSize: 20, marginBottom: 6 }}>Post to {activeLabel}</h3>
-        <p className="help-text" style={{ marginBottom: 16 }}>
-          Share a recommendation, or ask your coworkers for one, in the {activeLabel} section.
-        </p>
-        <form onSubmit={submit}>
-          <div className="form-grid" style={{ marginBottom: 12 }}>
+      <h2 style={{ fontSize: 22, marginBottom: 18 }}>Contribute a recommendation</h2>
+
+      <div className="recs-layout">
+        <div className="card" style={{ position: 'sticky', top: 24 }}>
+          <h3 style={{ fontSize: 20, marginBottom: 4 }}>Recommendation form</h3>
+          <p className="help-text" style={{ marginBottom: 16 }}>
+            Share a recommendation, or ask your coworkers for one, in the {activeLabel} section.
+          </p>
+          <form onSubmit={submit}>
             <div className="field">
               <label>Title</label>
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Best protein powder?" />
             </div>
             <div className="field">
+              <label>Detailed description (or question for community)</label>
+              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} placeholder="Add details, or ask a question" />
+            </div>
+            <div className="field">
+              <label>Photo</label>
+              <Dropzone
+                preview={imagePreview}
+                onFile={(file) => { setImageFile(file); setImagePreview(URL.createObjectURL(file)) }}
+              />
+            </div>
+            <div className="field">
               <label>Link (optional)</label>
               <input type="text" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
             </div>
-          </div>
-          <div className="field" style={{ marginBottom: 12 }}>
-            <label>Details</label>
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} placeholder="Add details, or ask a question for others to answer" />
-          </div>
-          <div className="field" style={{ marginBottom: 12 }}>
-            <label>Photo (optional)</label>
-            <input type="file" accept="image/*" onChange={handleImageChange} />
-            {imagePreview && (
-              <img src={imagePreview} alt="Preview" style={{ marginTop: 8, maxWidth: 160, borderRadius: 8, display: 'block' }} />
-            )}
-          </div>
-          <button className="btn btn-primary" disabled={saving || !title.trim()} type="submit">Post</button>
-          {message && <span className="help-text" style={{ marginLeft: 12 }}>{message}</span>}
-        </form>
-      </div>
+            <button
+              className="btn btn-primary"
+              disabled={saving || !title.trim()}
+              type="submit"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {saving ? 'Posting…' : 'Post'}
+            </button>
+            {message && <p className="help-text" style={{ marginTop: 10 }}>{message}</p>}
+          </form>
+        </div>
 
-      <div>
-        {filtered.length === 0 && <p className="help-text">No posts yet in {activeLabel}. Be the first to share one!</p>}
-        <div className="grid-3">
-          {filtered.map((p) => (
-            <div key={p.id} className="card">
-              {editingId === p.id ? (
-                <form onSubmit={(e) => saveEdit(e, p)}>
-                  <div className="field" style={{ marginBottom: 12 }}>
-                    <label>Title</label>
-                    <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                  </div>
-                  <div className="field" style={{ marginBottom: 12 }}>
-                    <label>Link (optional)</label>
-                    <input type="text" value={editLink} onChange={(e) => setEditLink(e.target.value)} placeholder="https://..." />
-                  </div>
-                  <div className="field" style={{ marginBottom: 12 }}>
-                    <label>Details</label>
-                    <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={3} />
-                  </div>
-                  <div className="field" style={{ marginBottom: 12 }}>
-                    <label>Photo (optional)</label>
-                    <input type="file" accept="image/*" onChange={handleEditImageChange} />
-                    {editImagePreview && (
-                      <img src={editImagePreview} alt="Preview" style={{ marginTop: 8, maxWidth: 160, borderRadius: 8, display: 'block' }} />
+        <div>
+          {filtered.length === 0 && <p className="help-text">No posts yet in {activeLabel}. Be the first to share one!</p>}
+          <div className="grid-2">
+            {filtered.map((p) => (
+              <div key={p.id} className="card post-card">
+                {editingId === p.id ? (
+                  <form onSubmit={(e) => saveEdit(e, p)}>
+                    <div className="field">
+                      <label>Title</label>
+                      <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                    </div>
+                    <div className="field">
+                      <label>Detailed description</label>
+                      <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={3} />
+                    </div>
+                    <div className="field">
+                      <label>Photo</label>
+                      <Dropzone
+                        preview={editImagePreview}
+                        onFile={(file) => { setEditImageFile(file); setEditImagePreview(URL.createObjectURL(file)) }}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Link (optional)</label>
+                      <input type="text" value={editLink} onChange={(e) => setEditLink(e.target.value)} placeholder="https://..." />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn btn-primary" type="submit" disabled={editSaving || !editTitle.trim()}>
+                        {editSaving ? 'Saving…' : 'Save'}
+                      </button>
+                      <button className="btn btn-outline" type="button" onClick={cancelEdit}>Cancel</button>
+                    </div>
+                    {editMessage && <p className="help-text" style={{ marginTop: 8 }}>{editMessage}</p>}
+                  </form>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, gap: 8 }}>
+                      <h3 style={{ fontSize: 17, margin: 0 }}>
+                        {p.link ? (
+                          <a href={p.link} target="_blank" rel="noreferrer" className="post-link-title">{p.title}</a>
+                        ) : p.title}
+                      </h3>
+                      {p.user_id === user?.id && (
+                        <div style={{ position: 'relative' }}>
+                          <button
+                            className="icon-btn"
+                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === p.id ? null : p.id) }}
+                          >
+                            ⋯
+                          </button>
+                          {openMenuId === p.id && (
+                            <div className="menu-popover" onClick={(e) => e.stopPropagation()}>
+                              <button onClick={() => { startEdit(p); setOpenMenuId(null) }}>Edit</button>
+                              <button className="danger" onClick={() => { remove(p.id); setOpenMenuId(null) }}>Delete</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {p.image_url && (
+                      <img
+                        src={p.image_url}
+                        alt={p.title}
+                        style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 8, marginBottom: 10 }}
+                      />
                     )}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-primary" type="submit" disabled={editSaving || !editTitle.trim()}>
-                      {editSaving ? 'Saving…' : 'Save'}
-                    </button>
-                    <button className="btn btn-outline" type="button" onClick={cancelEdit}>Cancel</button>
-                  </div>
-                  {editMessage && <p className="help-text" style={{ marginTop: 8 }}>{editMessage}</p>}
-                </form>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h3 style={{ fontSize: 18, marginBottom: 4 }}>
-                      {p.link ? (
-                        <a href={p.link} target="_blank" rel="noreferrer" className="post-link-title">{p.title}</a>
-                      ) : p.title}
-                    </h3>
-                    {p.user_id === user.id && (
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => startEdit(p)}>Edit</button>
-                        <button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => remove(p.id)}>Delete</button>
+                    {p.body && <p style={{ marginBottom: 10, fontSize: 14 }}>{p.body}</p>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Avatar name={p.author_name} url={avatarFor(p.user_id)} size={28} />
+                      <div style={{ fontSize: 13, lineHeight: 1.3 }}>
+                        <div className="help-text">Posted by</div>
+                        <div style={{ fontWeight: 600 }}>
+                          {p.author_name} <span className="help-text" style={{ fontWeight: 400 }}>· {new Date(p.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  {p.image_url && (
-                    <img src={p.image_url} alt={p.title} style={{ maxWidth: '100%', borderRadius: 8, marginBottom: 8 }} />
-                  )}
-                  {p.body && <p style={{ marginBottom: 8 }}>{p.body}</p>}
-                  <p className="help-text">{p.author_name} · {new Date(p.created_at).toLocaleDateString()}</p>
-                </>
-              )}
-            </div>
-          ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </main>
