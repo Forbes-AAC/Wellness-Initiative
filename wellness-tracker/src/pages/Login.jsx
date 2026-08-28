@@ -37,7 +37,7 @@ export default function Login() {
       <div className="card auth-card">
         <div className="eyebrow">{mode === 'signin' ? 'Welcome back' : 'Join the team'}</div>
       <img src={forbesMark} alt="Forbes AAC" style={{ height: 60, marginBottom: 10 }} />
-        <h1 style={{ fontSize: 22, marginBottom: 18 }}>Wellness</h1>
+        <h1 style={{ fontSize: 22, marginBottom: 18 }}>Forbes AAC Wellness Portal</h1>
 
         {mode !== 'forgot' && (
       <div className="tabs">
