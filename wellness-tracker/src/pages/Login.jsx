@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import forbesMark from '../assets/forbes-aac-mark.png'
+import mascotHero from '../assets/mascot-hero.webp'
 
 export default function Login() {
     const { signIn, signUp, resetPasswordForEmail } = useAuth()
@@ -34,10 +34,11 @@ export default function Login() {
 
   return (
     <div className="center-page">
-      <div className="card auth-card">
+      <div className="auth-hero-wrap">
+        <img src={mascotHero} alt="" className="auth-mascot" />
+        <div className="card auth-card">
         <div className="eyebrow">{mode === 'signin' ? 'Welcome back' : 'Join the team'}</div>
-      <img src={forbesMark} alt="Forbes AAC" style={{ height: 60, marginBottom: 10 }} />
-        <h1 style={{ fontSize: 22, marginBottom: 18 }}>Wellness</h1>
+        <h1 style={{ fontSize: 22, marginBottom: 18 }}>Forbes AAC Wellness Portal</h1>
 
         {mode !== 'forgot' && (
       <div className="tabs">
@@ -77,6 +78,7 @@ export default function Login() {
               <button type="button" onClick={() => { setMode('signin'); setError(''); setNotice('') }} style={{ background: 'none', border: 'none', color: 'var(--pine)', textDecoration: 'underline', cursor: 'pointer', padding: 0, font: 'inherit' }}>Back to sign in</button>
         </p>
       )}
+      </div>
       </div>
     </div>
   )
