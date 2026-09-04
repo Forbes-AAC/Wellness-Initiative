@@ -221,7 +221,7 @@ export default function Tracker() {
                   type="number"
                   value={value}
                   onChange={(ev) => setValues((prev) => ({ ...prev, [e.challenge_type]: ev.target.value }))}
-                  placeholder={`${LABELS[e.challenge_type].label} for this day`}
+                  placeholder={e.challenge_type === 'workout' ? 'Minutes' : `${LABELS[e.challenge_type].label} for this day`}
                 />
               )}
               {e.challenge_type === 'steps' && (
