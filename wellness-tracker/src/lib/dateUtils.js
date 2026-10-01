@@ -20,3 +20,12 @@ export const monthLabel = (monthStr) => {
   const [y, m] = monthStr.split('-').map(Number)
   return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
+
+// Returns the current month plus the `count - 1` months before it, newest first.
+export const recentMonths = (count = 12) => {
+  const d = new Date()
+  return Array.from({ length: count }, (_, i) => {
+    const m = new Date(d.getFullYear(), d.getMonth() - i, 1)
+    return `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`
+  })
+}

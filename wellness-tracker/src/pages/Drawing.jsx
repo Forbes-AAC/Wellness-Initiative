@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { currentMonth, monthLabel } from '../lib/dateUtils'
+import { currentMonth, monthLabel, recentMonths } from '../lib/dateUtils'
 
 const CHALLENGE_TYPES = ['steps', 'weight', 'water', 'nutrition', 'workout']
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
 
 export default function Drawing() {
   const { user, profile } = useAuth()
-  const month = currentMonth()
+  const [month, setMonth] = useState(currentMonth())
   const [loading, setLoading] = useState(true)
   const [qualified, setQualified] = useState([])
   const [winners, setWinners] = useState([])
@@ -34,7 +34,7 @@ export default function Drawing() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [month])
 
   if (!profile?.is_admin) {
     return (
@@ -90,8 +90,16 @@ export default function Drawing() {
     <main className="content">
       <div className="eyebrow">{monthLabel(month)}</div>
       <h1 style={{ fontSize: 34, marginBottom: 6 }}>Prize drawing</h1>
+      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, margin: '6px 0 12px' }}>
+        <span className="help-text" style={{ margin: 0 }}>Drawing for</span>
+        <select value={month} onChange={(e) => setMonth(e.target.value)}>
+          {recentMonths(12).map((m) => (
+            <option key={m} value={m}>{monthLabel(m)}</option>
+          ))}
+        </select>
+      </label>
       <p className="help-text" style={{ marginBottom: 22 }}>
-        Eligible participants qualified by hitting their goal on more than 90% of days this month (or losing weight, for the weight challenge). Each person can only win a given challenge once, ever.
+        Eligible participants qualified by hitting their goal on more than 90% of days that month (or losing weight, for the weight challenge). Each person can only win a given challenge once, ever.
       </p>
 
       {message && <p className="error-text">{message}</p>}
@@ -104,7 +112,7 @@ export default function Drawing() {
             <div className="card" key={type}>
               <h3 style={{ fontSize: 18, marginBottom: 8 }}>{TYPE_LABEL[type]}</h3>
               <p className="help-text" style={{ marginBottom: 8 }}>
-                {pool.length} eligible participant{pool.length === 1 ? '' : 's'} this month
+                {pool.length} eligible participant{pool.length === 1 ? '' : 's'} for {monthLabel(month)}
               </p>
 
               {pool.length > 0 && (
