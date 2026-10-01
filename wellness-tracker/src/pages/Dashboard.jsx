@@ -7,6 +7,7 @@ import ShoutOuts from '../components/ShoutOuts'
 import { useNavigate } from 'react-router-dom'
 import Avatar from '../components/Avatar'
 import MyStats from '../components/MyStats'
+import { carryForwardEnrollments } from '../lib/enrollments'
 import wellnessHero from '../assets/wellness-hero.webp'
 
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [showEnroll, setShowEnroll] = useState(false)
 
   const loadAll = async () => {
+    await carryForwardEnrollments(user?.id, month)
     const { data: enr } = await supabase.from('enrollments').select('*').eq('month', month)
     const { data: lg } = await supabase.from('daily_logs').select('*').gte('log_date', `${month}-01`)
     const { count } = await supabase.from('prizes').select('*', { count: 'exact', head: true }).eq('month', month)

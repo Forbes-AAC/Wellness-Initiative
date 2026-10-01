@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { currentMonth, todayISO } from '../lib/dateUtils'
+import { currentMonth, monthLabel, monthOf, nextMonthStart, todayISO } from '../lib/dateUtils'
+import { carryForwardEnrollments } from '../lib/enrollments'
 import { BONUS_CHALLENGES, BONUS_CHALLENGE_KEYS } from '../lib/bonusChallenges'
 import { CHALLENGE_ICONS } from '../lib/challengeIcons'
 
@@ -17,9 +18,11 @@ const WORKOUT_TYPES = ['HIIT', 'Cross Training', 'Cardio', 'Strength Training', 
 
 export default function Tracker() {
   const { user } = useAuth()
-  const month = currentMonth()
   const today = todayISO()
   const [logDate, setLogDate] = useState(today)
+  // Challenges and history follow the month of the day being logged, so past
+  // months can still be caught up on.
+  const month = monthOf(logDate)
   const [enrollments, setEnrollments] = useState([])
   const [values, setValues] = useState({})
   const [photos, setPhotos] = useState({})
@@ -32,6 +35,7 @@ export default function Tracker() {
 
   const load = async (dateForValues) => {
     setLoading(true)
+    await carryForwardEnrollments(user.id, currentMonth())
     const { data: enr } = await supabase
       .from('enrollments')
       .select('*')
@@ -50,8 +54,8 @@ export default function Tracker() {
       .select('*')
       .eq('user_id', user.id)
       .gte('log_date', `${month}-01`)
+      .lt('log_date', nextMonthStart(month))
       .order('log_date', { ascending: false })
-      .limit(31)
 
     setEnrollments(enr || [])
     const v = {}
@@ -187,7 +191,7 @@ export default function Tracker() {
 
       {enrollments.length === 0 && (
         <div className="card">
-          <p>You're not enrolled in any daily challenges yet.</p>
+          <p>You're not enrolled in any daily challenges for {monthLabel(month)}.</p>
           <a href="/challenges" className="btn btn-primary" style={{ marginTop: 12, textDecoration: 'none' }}>Pick a challenge</a>
         </div>
       )}
@@ -281,7 +285,7 @@ export default function Tracker() {
       {message && <p className="help-text" style={{ marginBottom: 20 }}>{message}</p>}
 
       <div className="card">
-        <h3 style={{ fontSize: 18, marginBottom: 14 }}>This month's history</h3>
+        <h3 style={{ fontSize: 18, marginBottom: 14 }}>{monthLabel(month)} history</h3>
         <table>
           <thead>
             <tr><th>Date</th><th>Challenge</th><th>Value</th><th>Goal met</th><th>Photo</th><th>Edit</th><th>Delete</th></tr>
@@ -299,7 +303,7 @@ export default function Tracker() {
               </tr>
             ))}
             {history.length === 0 && (
-              <tr><td colSpan={7} className="help-text">No entries logged yet this month.</td></tr>
+              <tr><td colSpan={7} className="help-text">No entries logged for {monthLabel(month)} yet.</td></tr>
             )}
           </tbody>
         </table>

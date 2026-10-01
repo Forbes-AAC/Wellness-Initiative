@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { currentMonth, monthLabel, todayISO } from '../lib/dateUtils'
+import { carryForwardEnrollments } from '../lib/enrollments'
 import { BONUS_CHALLENGES, BONUS_CHALLENGE_KEYS } from '../lib/bonusChallenges'
 import { CHALLENGE_ICONS } from '../lib/challengeIcons'
 
@@ -38,6 +39,7 @@ export default function MyStats({ userId }) {
     if (!userId) return
     const load = async () => {
       setLoading(true)
+      await carryForwardEnrollments(userId, month)
       const { data: enr } = await supabase
         .from('enrollments')
         .select('*')
