@@ -29,3 +29,13 @@ export const recentMonths = (count = 12) => {
     return `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`
   })
 }
+
+// 'YYYY-MM-DD' (or 'YYYY-MM') -> 'YYYY-MM'
+export const monthOf = (dateStr) => dateStr.slice(0, 7)
+
+// First day of the month after `monthStr`, as 'YYYY-MM-DD'.
+export const nextMonthStart = (monthStr) => {
+  const [y, m] = monthStr.split('-').map(Number)
+  const d = new Date(y, m, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+}

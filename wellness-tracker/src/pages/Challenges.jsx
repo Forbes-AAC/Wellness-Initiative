@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { currentMonth, monthLabel } from '../lib/dateUtils'
+import { carryForwardEnrollments } from '../lib/enrollments'
 import {
   calculateWaterIntakeOz,
   calculateCalorieTarget,
@@ -36,6 +37,7 @@ export default function Challenges() {
 
   const load = async () => {
     setLoading(true)
+    await carryForwardEnrollments(user.id, month)
     const { data } = await supabase.from('enrollments').select('*').eq('user_id', user.id).eq('month', month)
     const byType = {}
     ;(data || []).forEach((row) => { byType[row.challenge_type] = row })
