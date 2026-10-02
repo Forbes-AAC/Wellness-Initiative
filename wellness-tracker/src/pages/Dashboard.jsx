@@ -50,6 +50,10 @@ export default function Dashboard() {
   const trailMiles = Math.round(totalSteps / 2000)
   const trailPct = Math.min(100, Math.round((trailMiles / TRAIL_MILESTONE_MILES) * 100))
 
+  const daysSoFar = daysElapsedInMonth(month)
+
+  // Mirrors the monthly_qualification view: the denominator is days elapsed
+  // in the month, not days logged, so unlogged days count against you.
   const byType = ['steps', 'weight', 'water', 'nutrition', 'workout'].map((type) => {
     const typeEnrollments = enrollments.filter((e) => e.challenge_type === type)
     const typeLogs = logs.filter((l) => l.challenge_type === type)
@@ -58,15 +62,13 @@ export default function Dashboard() {
       if (type === 'weight') {
         if (e.ending_weight != null && e.starting_weight != null && e.ending_weight < e.starting_weight) qualifying++
       } else {
-        const mine = typeLogs.filter((l) => l.user_id === e.user_id)
-        const hit = mine.filter((l) => l.goal_met).length
-        if (mine.length && hit / mine.length > 0.9) qualifying++
+        const hit = typeLogs.filter((l) => l.user_id === e.user_id && l.goal_met).length
+        const needed = type === 'workout' ? (e.days_target || 0) * daysSoFar / 7 : daysSoFar
+        if (needed && hit > 0.9 * needed) qualifying++
       }
     })
     return { type, enrolled: typeEnrollments.length, qualifying }
   })
-
-  const daysSoFar = daysElapsedInMonth(month)
   const totalLoggedDays = logs.length
   const avgLogsPerParticipant = participantIds.size ? (totalLoggedDays / participantIds.size).toFixed(1) : '0'
 

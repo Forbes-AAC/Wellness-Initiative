@@ -147,9 +147,14 @@ create policy "Only admins can delete prizes"
   using (exists (select 1 from profiles where id = auth.uid() and is_admin = true));
 
 -- ---------- HELPER VIEW: monthly qualification ----------
--- Recomputes, for every enrolled person this month, whether they've hit
--- their goal on >90% of days elapsed so far (steps / water / nutrition),
--- or lost weight (weight challenge).
+-- Recomputes, for every enrolled person and month, whether they qualify
+-- for that month's drawing. The denominator is calendar days in the month
+-- (or days elapsed so far, for the current month) — NOT days logged, so
+-- skipped/unlogged days count against you.
+--   steps / water / nutrition: goal met on >90% of those days
+--   workout: 45+ min sessions > 90% of the sessions the weekly goal
+--            (days_target per week) adds up to over those days
+--   weight: ending weight lower than starting weight
 create or replace view monthly_qualification as
 select
   e.id as enrollment_id,
@@ -160,20 +165,32 @@ select
   case
     when e.challenge_type = 'weight' then
       (e.ending_weight is not null and e.starting_weight is not null and e.ending_weight < e.starting_weight)
-    else
+    when e.challenge_type = 'workout' then
       coalesce(
-        (select count(*) filter (where d.goal_met) ::numeric
-           / nullif(count(*),0)
+        (select count(*) filter (where d.goal_met)
          from daily_logs d
          where d.user_id = e.user_id
            and d.challenge_type = e.challenge_type
            and to_char(d.log_date, 'YYYY-MM') = e.month
-        ) > 0.9,
+        ) > 0.9 * e.days_target * m.days_counted / 7.0,
         false
       )
+    else
+      (select count(*) filter (where d.goal_met)
+       from daily_logs d
+       where d.user_id = e.user_id
+         and d.challenge_type = e.challenge_type
+         and to_char(d.log_date, 'YYYY-MM') = e.month
+      ) > 0.9 * m.days_counted
   end as qualifies_for_drawing
 from enrollments e
 join profiles p on p.id = e.user_id
+cross join lateral (
+  select case
+    when e.month = to_char(current_date, 'YYYY-MM') then extract(day from current_date)
+    else extract(day from (to_date(e.month || '-01', 'YYYY-MM-DD') + interval '1 month - 1 day'))
+  end as days_counted
+) m
 -- Bonus "Mind & Spirit" challenges (recovery_break, morning_ritual,
 -- phone_free_lunch) are intentionally excluded — they're not prize-eligible.
 where e.challenge_type in ('steps','weight','water','nutrition','workout');
