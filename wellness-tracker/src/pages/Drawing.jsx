@@ -127,6 +127,20 @@ export default function Drawing() {
     load()
   }
 
+  // Plays the reveal with this month's qualified names (or everyone, if no one has qualified yet) without saving anything.
+  const previewReveal = () => {
+    const qualifiedNames = [...new Set(qualified.map((q) => nameFor(q.user_id)))]
+    const names = qualifiedNames.length ? qualifiedNames : profiles.map((p) => p.full_name).filter(Boolean)
+    if (!names.length) return
+    setReveal({
+      challengeLabel: 'Preview',
+      names,
+      winnerName: names[Math.floor(Math.random() * names.length)],
+      goalLabel: null,
+      preview: true,
+    })
+  }
+
   return (
     <main className="content">
       <div className="eyebrow">{monthLabel(month)}</div>
@@ -139,6 +153,9 @@ export default function Drawing() {
           ))}
         </select>
       </label>
+      <button className="btn btn-outline" style={{ marginLeft: 12 }} onClick={previewReveal}>
+        Preview reveal
+      </button>
       <p className="help-text" style={{ marginBottom: 22 }}>
         Eligible participants qualified by hitting their goal on more than 90% of days that month (or losing weight, for the weight challenge). Each person can win only one challenge per month, and can't win the same challenge twice. For Steps and Workout, a past winner can win again by moving up to a higher goal than the one they won at.
       </p>

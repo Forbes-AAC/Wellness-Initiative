@@ -63,7 +63,7 @@ function Confetti() {
 }
 
 // Shuffles through the eligible names, lands on the winner, then celebrates.
-export default function WinnerReveal({ challengeLabel, monthLabel, names, winnerName, goalLabel, onClose }) {
+export default function WinnerReveal({ challengeLabel, monthLabel, names, winnerName, goalLabel, preview = false, onClose }) {
   const reduceMotion = prefersReducedMotion()
   const [revealed, setRevealed] = useState(reduceMotion || names.length < 2)
   const [shownName, setShownName] = useState(names[0] || winnerName)
@@ -104,6 +104,7 @@ export default function WinnerReveal({ challengeLabel, monthLabel, names, winner
           {revealed ? winnerName : shownName}
         </div>
         {revealed && goalLabel && <p className="help-text reveal-goal">Goal: {goalLabel}</p>}
+        {preview && <p className="help-text reveal-goal">Just a preview. No winner was saved.</p>}
         {revealed && (
           <button className="btn btn-gold" onClick={onClose} autoFocus>
             Woohoo! Close
