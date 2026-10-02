@@ -435,3 +435,75 @@ alter table enrollments add constraint enrollments_challenge_type_check
 alter table daily_logs drop constraint if exists daily_logs_challenge_type_check;
 alter table daily_logs add constraint daily_logs_challenge_type_check
   check (challenge_type in ('steps','water','nutrition','workout','recovery_break','morning_ritual','phone_free_lunch'));
+
+
+-- =========================================================
+-- MIGRATION: one win per person per month, across all challenges.
+-- The Drawing page already leaves anyone who won this month out of
+-- the other challenges' pools; this trigger backs that up in the
+-- database. (Already applied to production on 2026-10-02.)
+-- =========================================================
+create or replace function public.one_win_per_month()
+returns trigger
+language plpgsql
+as $$
+declare
+  winner_name text;
+begin
+  if exists (
+    select 1 from winners
+    where user_id = new.user_id
+      and month = new.month
+      and id <> new.id
+  ) then
+    select full_name into winner_name from profiles where id = new.user_id;
+    raise exception '% already won a challenge this month. Click "Draw a winner" again.',
+      coalesce(winner_name, 'This person');
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists one_win_per_month on winners;
+create trigger one_win_per_month
+  before insert or update on winners
+  for each row execute function public.one_win_per_month();
+
+
+-- =========================================================
+-- MIGRATION: carry prizes over into each new month.
+-- The Prizes page only shows the current month's prizes, so on the
+-- 1st this copies the most recent month's prizes forward (only if
+-- the new month has none yet). (Already applied to production on
+-- 2026-09-28.)
+-- =========================================================
+create or replace function public.carry_over_prizes()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  cur text := to_char(now() at time zone 'UTC', 'YYYY-MM');
+  src text;
+begin
+  if exists (select 1 from prizes where month = cur) then
+    return;
+  end if;
+
+  select max(month) into src from prizes where month < cur;
+  if src is null then
+    return;
+  end if;
+
+  insert into prizes (title, description, size, image_url, month, created_by)
+  select title, description, size, image_url, cur, created_by
+  from prizes
+  where month = src;
+end;
+$$;
+
+revoke execute on function public.carry_over_prizes() from public, anon, authenticated;
+
+create extension if not exists pg_cron;
+select cron.schedule('carry-over-prizes', '5 0 1 * *', 'select public.carry_over_prizes()');
