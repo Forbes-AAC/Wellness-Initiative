@@ -2,9 +2,19 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { currentMonth, monthLabel, recentMonths } from '../lib/dateUtils'
+import WinnerReveal from '../components/WinnerReveal'
 
 const CHALLENGE_TYPES = ['steps', 'weight', 'water', 'nutrition', 'workout']
 const TYPE_LABEL = { steps: 'Steps', weight: 'Weight loss', water: 'Water', nutrition: 'Nutrition', workout: 'Workout' }
+
+// Challenges with goal tiers: a past winner can win again by moving up to a higher tier.
+const TIER_FIELD = { steps: 'steps_target', workout: 'days_target' }
+const tierLabel = (type, value) => {
+  if (value == null) return null
+  if (type === 'steps') return `${value.toLocaleString()} steps/day`
+  if (type === 'workout') return `${value} days/week`
+  return null
+}
 
 export default function Drawing() {
   const { user, profile } = useAuth()
@@ -13,11 +23,14 @@ export default function Drawing() {
   const [qualified, setQualified] = useState([])
   const [winners, setWinners] = useState([])
   const [profiles, setProfiles] = useState([])
+  const [tieredEnrollments, setTieredEnrollments] = useState([])
   const [drawingType, setDrawingType] = useState(null)
   const [message, setMessage] = useState('')
+  const [reveal, setReveal] = useState(null)
 
-  const load = async () => {
-    setLoading(true)
+  // `quiet` refreshes the data without swapping the page for "Loading…" (used behind the reveal).
+  const load = async (quiet = false) => {
+    if (!quiet) setLoading(true)
     const { data: q } = await supabase
       .from('monthly_qualification')
       .select('*')
@@ -28,9 +41,14 @@ export default function Drawing() {
       .select('*')
       .order('drawn_at', { ascending: false })
     const { data: pf } = await supabase.from('profiles').select('id, full_name')
+    const { data: te } = await supabase
+      .from('enrollments')
+      .select('user_id, challenge_type, month, steps_target, days_target')
+      .in('challenge_type', Object.keys(TIER_FIELD))
     setQualified(q || [])
     setWinners(w || [])
     setProfiles(pf || [])
+    setTieredEnrollments(te || [])
     setLoading(false)
   }
 
@@ -49,13 +67,30 @@ export default function Drawing() {
 
   const nameFor = (userId) => profiles.find((p) => p.id === userId)?.full_name || 'Unknown'
 
-  const pastWinnerIds = (type) =>
-    new Set(winners.filter((w) => w.challenge_type === type).map((w) => w.user_id))
-
-  const eligibleFor = (type) => {
-    const alreadyWon = pastWinnerIds(type)
-    return qualified.filter((q) => q.challenge_type === type && !alreadyWon.has(q.user_id))
+  // The tier (step goal / workout days) someone was enrolled at for a given month.
+  const goalFor = (userId, type, m) => {
+    const field = TIER_FIELD[type]
+    if (!field) return null
+    return tieredEnrollments.find((e) => e.user_id === userId && e.challenge_type === type && e.month === m)?.[field] ?? null
   }
+
+  // Nobody wins the same challenge twice, unless it has tiers and they've moved up past every tier they won at.
+  const canWinChallenge = (userId, type) => {
+    const pastWins = winners.filter((w) => w.challenge_type === type && w.user_id === userId && w.month !== month)
+    if (!pastWins.length) return true
+    if (!TIER_FIELD[type]) return false
+    const goalNow = goalFor(userId, type, month)
+    if (goalNow == null) return false
+    // A past win with no recorded tier counts as the top tier, so it can't be re-won.
+    const bestWonAt = Math.max(...pastWins.map((w) => goalFor(userId, type, w.month) ?? Infinity))
+    return goalNow > bestWonAt
+  }
+
+  // One win per person per month, across all challenges.
+  const wonThisMonth = new Set(winners.filter((w) => w.month === month).map((w) => w.user_id))
+
+  const eligibleFor = (type) =>
+    qualified.filter((q) => q.challenge_type === type && !wonThisMonth.has(q.user_id) && canWinChallenge(q.user_id, type))
 
   const winnerThisMonth = (type) => winners.find((w) => w.challenge_type === type && w.month === month)
 
@@ -74,9 +109,15 @@ export default function Drawing() {
     setDrawingType(null)
     if (error) {
       setMessage(error.message)
-    } else {
-      load()
+      return
     }
+    setReveal({
+      challengeLabel: TYPE_LABEL[type],
+      names: pool.map((p) => nameFor(p.user_id)),
+      winnerName: nameFor(pick.user_id),
+      goalLabel: tierLabel(type, goalFor(pick.user_id, type, month)),
+    })
+    load(true)
   }
 
   const clearWinner = async (winnerRow) => {
@@ -99,7 +140,7 @@ export default function Drawing() {
         </select>
       </label>
       <p className="help-text" style={{ marginBottom: 22 }}>
-        Eligible participants qualified by hitting their goal on more than 90% of days that month (or losing weight, for the weight challenge). Each person can only win a given challenge once, ever.
+        Eligible participants qualified by hitting their goal on more than 90% of days that month (or losing weight, for the weight challenge). Each person can win only one challenge per month, and can't win the same challenge twice. For Steps and Workout, a past winner can win again by moving up to a higher goal than the one they won at.
       </p>
 
       {message && <p className="error-text">{message}</p>}
@@ -120,6 +161,9 @@ export default function Drawing() {
                   {pool.map((p) => (
                     <li key={p.enrollment_id || p.user_id} style={{ fontSize: 14, marginBottom: 2 }}>
                       {nameFor(p.user_id)}
+                      {goalFor(p.user_id, type, month) != null && (
+                        <span className="help-text"> · {tierLabel(type, goalFor(p.user_id, type, month))}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -129,6 +173,9 @@ export default function Drawing() {
                 <>
                   <p style={{ marginBottom: 10 }}>
                     Winner: <strong>{nameFor(winner.user_id)}</strong>
+                    {goalFor(winner.user_id, type, month) != null && (
+                      <span className="help-text"> · {tierLabel(type, goalFor(winner.user_id, type, month))}</span>
+                    )}
                   </p>
                   <button className="btn btn-outline" onClick={() => clearWinner(winner)}>
                     Clear &amp; redraw
@@ -157,11 +204,20 @@ export default function Drawing() {
               key={w.id}
               style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}
             >
-              <span>{monthLabel(w.month)} — {TYPE_LABEL[w.challenge_type]}</span>
+              <span>
+                {monthLabel(w.month)} — {TYPE_LABEL[w.challenge_type]}
+                {goalFor(w.user_id, w.challenge_type, w.month) != null && (
+                  <span className="help-text"> · {tierLabel(w.challenge_type, goalFor(w.user_id, w.challenge_type, w.month))}</span>
+                )}
+              </span>
               <strong>{nameFor(w.user_id)}</strong>
             </div>
           ))}
         </div>
+      )}
+
+      {reveal && (
+        <WinnerReveal {...reveal} monthLabel={monthLabel(month)} onClose={() => setReveal(null)} />
       )}
     </main>
   )
